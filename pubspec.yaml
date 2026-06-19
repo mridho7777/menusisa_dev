@@ -1,0 +1,67 @@
+name: menusisa_dev
+description: "MenuSisa Super Admin Dashboard"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State Management
+  provider: ^6.1.5
+
+  # Routing
+  go_router: ^16.0.0
+
+  # Supabase
+  supabase_flutter: ^2.9.1
+
+  # SVG
+  flutter_svg: ^2.2.0
+
+  # Lottie Animation
+  lottie: ^3.3.2
+
+  # Intl
+  intl: ^0.20.2
+
+  # Responsive UI
+  responsive_builder: ^0.7.1
+  fl_chart: ^1.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/images/logo/
+    - assets/images/avatars/
+    - assets/images/illustrations/
+    - assets/icons/
+    - assets/svg/
+    - assets/lottie/
+
+  fonts:
+    - family: Quicksand
+      fonts:
+        - asset: assets/fonts/Quicksand-Regular.ttf
+        - asset: assets/fonts/Quicksand-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Quicksand-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Quicksand-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Quicksand-Light.ttf
+          weight: 300
