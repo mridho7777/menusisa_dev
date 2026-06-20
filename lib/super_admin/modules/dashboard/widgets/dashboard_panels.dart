@@ -55,22 +55,37 @@ class DashboardTopSummary extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      item.value,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item.actionLabel,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        color: positive
-                            ? const Color(0xFF16A34A)
-                            : const Color(0xFF6B7280),
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          fit: FlexFit.loose,
+                          child: Text(
+                            item.value,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          fit: FlexFit.loose,
+                          child: Text(
+                            item.actionLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: positive
+                                  ? const Color(0xFF16A34A)
+                                  : const Color(0xFF6B7280),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

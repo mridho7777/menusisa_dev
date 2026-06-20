@@ -64,24 +64,24 @@ class _MetricCard extends StatelessWidget {
         ),
       ),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: Row(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 66,
+              height: 66,
               decoration: BoxDecoration(
                 color: Color(metric.color),
-                borderRadius: BorderRadius.circular(13),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, color: Colors.white, size: 24),
+              child: Icon(icon, color: Colors.white, size: 36),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,27 +92,41 @@ class _MetricCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 14,
                       color: Color(0xFF374151),
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    metric.value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    metric.delta,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF16A34A),
-                    ),
+                  const SizedBox(height: 5),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        fit: FlexFit.loose,
+                        child: Text(
+                          metric.value,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Flexible(
+                        fit: FlexFit.loose,
+                        child: Text(
+                          metric.delta,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF16A34A),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
