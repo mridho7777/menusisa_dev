@@ -7,40 +7,27 @@ class DashboardLineChart extends StatelessWidget {
   final double progress;
 
   static const _spots = <FlSpot>[
-    FlSpot(0, 140),
-    FlSpot(1, 430),
-    FlSpot(2, 260),
-    FlSpot(3, 360),
-    FlSpot(4, 520),
-    FlSpot(5, 560),
-    FlSpot(6, 330),
-    FlSpot(7, 260),
-    FlSpot(8, 390),
-    FlSpot(9, 340),
-    FlSpot(10, 460),
-    FlSpot(11, 410),
-    FlSpot(12, 610),
-    FlSpot(13, 580),
-    FlSpot(14, 480),
-    FlSpot(15, 640),
-    FlSpot(16, 820),
-    FlSpot(17, 760),
-    FlSpot(18, 800),
-    FlSpot(19, 780),
+    FlSpot(1, 140),
+    FlSpot(2, 430),
+    FlSpot(3, 260),
+    FlSpot(4, 360),
+    FlSpot(5, 520),
+    FlSpot(6, 560),
+    FlSpot(7, 330),
   ];
 
   @override
   Widget build(BuildContext context) {
     return LineChart(
       LineChartData(
-        minX: 0,
-        maxX: 19,
+        minX: 1,
+        maxX: 7,
         minY: 0,
-        maxY: 1000,
+        maxY: 700,
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: 200,
+          horizontalInterval: 100,
           getDrawingHorizontalLine: (value) =>
               const FlLine(color: Color(0xFFE5E7EB), strokeWidth: 1),
         ),
@@ -55,7 +42,7 @@ class DashboardLineChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 34,
-              interval: 200,
+              interval: 100,
               getTitlesWidget: (value, meta) => Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: Text(
@@ -72,16 +59,16 @@ class DashboardLineChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 28,
-              interval: 3,
+              interval: 1,
               getTitlesWidget: (value, meta) {
                 final labels = <int, String>{
-                  0: '20 Apr',
-                  3: '25 Apr',
-                  6: '30 Apr',
-                  9: '5 Mei',
-                  12: '10 Mei',
-                  15: '15 Mei',
-                  18: '20 Mei',
+                  1: '1',
+                  2: '2',
+                  3: '3',
+                  4: '4',
+                  5: '5',
+                  6: '6',
+                  7: '7',
                 };
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
@@ -102,8 +89,9 @@ class DashboardLineChart extends StatelessWidget {
           enabled: true,
           touchTooltipData: LineTouchTooltipData(
             getTooltipItems: (spots) => spots.map((spot) {
+              final day = spot.x.toInt();
               return LineTooltipItem(
-                ' 10 Mei 2025\nTransaksi: 680',
+                'Hari $day\nTransaksi: ${spot.y.toInt()}',
                 const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -115,16 +103,7 @@ class DashboardLineChart extends StatelessWidget {
         ),
         lineBarsData: [
           LineChartBarData(
-            spots: _spots
-                .map((spot) {
-                  final count = (_spots.length * progress)
-                      .clamp(2, _spots.length)
-                      .toInt();
-                  final index = _spots.indexOf(spot);
-                  return index < count ? spot : FlSpot(spot.x, double.nan);
-                })
-                .where((spot) => !spot.y.isNaN)
-                .toList(),
+            spots: _spots.take((_spots.length * progress).clamp(2, _spots.length).toInt()).toList(),
             isCurved: true,
             color: const Color(0xFF0F8D55),
             barWidth: 2.5,

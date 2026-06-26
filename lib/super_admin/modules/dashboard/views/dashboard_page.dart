@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/routes/app_routes.dart';
@@ -20,6 +21,11 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage>
     with TickerProviderStateMixin {
   late final AnimationController chartController;
+
+  void _openNotifications() {
+    context.read<MenuProvider>().setRoute(AppRoutes.notifications);
+    context.go(AppRoutes.notifications);
+  }
 
   @override
   void initState() {
@@ -90,7 +96,7 @@ class _DashboardPageState extends State<DashboardPage>
                         child: _ResponsiveInfoPairSection(
                           activityCard: const _ActivityCard(),
                           notices: dashboardNotices,
-                          onSeeAllNotices: () {},
+                          onSeeAllNotices: _openNotifications,
                         ),
                       ),
                       const SizedBox(height: 14),
@@ -100,7 +106,8 @@ class _DashboardPageState extends State<DashboardPage>
                       const SizedBox(height: 14),
                       LayoutBuilder(
                         builder: (context, sectionConstraints) {
-                          final localNarrow = sectionConstraints.maxWidth < 1250;
+                          final localNarrow =
+                              sectionConstraints.maxWidth < 1250;
                           if (localNarrow) {
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -111,7 +118,8 @@ class _DashboardPageState extends State<DashboardPage>
                                   height: 440,
                                   child: DashboardTransactionTable(
                                     items: dashboardTransactions,
-                                    onTap: (tx) => controller.setSelectedTransaction(tx.id),
+                                    onTap: (tx) => controller
+                                        .setSelectedTransaction(tx.id),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
@@ -119,7 +127,9 @@ class _DashboardPageState extends State<DashboardPage>
                                   title: 'Top Merchant (Berdasarkan Penjualan)',
                                   actionLabel: 'Lihat Semua',
                                   height: 440,
-                                  child: DashboardMerchantList(items: dashboardMerchants),
+                                  child: DashboardMerchantList(
+                                    items: dashboardMerchants,
+                                  ),
                                 ),
                               ],
                             );
@@ -136,7 +146,8 @@ class _DashboardPageState extends State<DashboardPage>
                                   height: 440,
                                   child: DashboardTransactionTable(
                                     items: dashboardTransactions,
-                                    onTap: (tx) => controller.setSelectedTransaction(tx.id),
+                                    onTap: (tx) => controller
+                                        .setSelectedTransaction(tx.id),
                                   ),
                                 ),
                               ),
@@ -147,7 +158,9 @@ class _DashboardPageState extends State<DashboardPage>
                                   title: 'Top Merchant (Berdasarkan Penjualan)',
                                   actionLabel: 'Lihat Semua',
                                   height: 440,
-                                  child: DashboardMerchantList(items: dashboardMerchants),
+                                  child: DashboardMerchantList(
+                                    items: dashboardMerchants,
+                                  ),
                                 ),
                               ),
                             ],
@@ -208,7 +221,6 @@ class _DashboardHeaderBar extends StatelessWidget {
   }
 }
 
-
 class _ResponsiveAnalyticsSection extends StatelessWidget {
   const _ResponsiveAnalyticsSection({
     required this.chartProgress,
@@ -235,11 +247,7 @@ class _ResponsiveAnalyticsSection extends StatelessWidget {
         if (verticalLayout) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              chart,
-              const SizedBox(height: 14),
-              donut,
-            ],
+            children: [chart, const SizedBox(height: 14), donut],
           );
         }
 
@@ -276,20 +284,13 @@ class _ResponsiveInfoPairSection extends StatelessWidget {
           title: 'Informasi Cepat',
           actionLabel: '',
           height: 360,
-          child: DashboardNoticeList(
-            items: notices,
-            onSeeAll: onSeeAllNotices,
-          ),
+          child: DashboardNoticeList(items: notices, onSeeAll: onSeeAllNotices),
         );
 
         if (stacked) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              activityCard,
-              const SizedBox(height: 14),
-              quickInfo,
-            ],
+            children: [activityCard, const SizedBox(height: 14), quickInfo],
           );
         }
 
@@ -305,7 +306,6 @@ class _ResponsiveInfoPairSection extends StatelessWidget {
     );
   }
 }
-
 
 class _QuickActionGrid extends StatelessWidget {
   const _QuickActionGrid({required this.actions});
@@ -338,7 +338,10 @@ class _QuickActionGrid extends StatelessWidget {
               itemBuilder: (context, index) {
                 final action = actions[index];
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF9FAFB),
                     borderRadius: BorderRadius.circular(14),
@@ -350,10 +353,16 @@ class _QuickActionGrid extends StatelessWidget {
                         width: 34,
                         height: 34,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0F8D55).withValues(alpha: 0.12),
+                          color: const Color(
+                            0xFF0F8D55,
+                          ).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(_quickActionIcon(action.icon), color: const Color(0xFF0F8D55), size: 18),
+                        child: Icon(
+                          _quickActionIcon(action.icon),
+                          color: const Color(0xFF0F8D55),
+                          size: 18,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -361,7 +370,10 @@ class _QuickActionGrid extends StatelessWidget {
                           action.label,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],

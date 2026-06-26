@@ -43,3 +43,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Local tools
+.agents/
+skills-lock.json
+
+# Archive files
+*.zip
+
+# Backup files
+*_backup.dart
