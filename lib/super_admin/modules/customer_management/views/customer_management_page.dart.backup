@@ -76,9 +76,9 @@ class _CustomerManagementPageState extends State<CustomerManagementPage> {
                     itemCount: customerStats.length,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: statsColumns,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: sidebarCollapsed ? 2.8 : 4.2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: compact ? 3.2 : 4.2,
                     ),
                     itemBuilder: (context, index) => _StatCard(stat: customerStats[index]),
                   ),
@@ -123,8 +123,7 @@ class _CustomerManagementPageState extends State<CustomerManagementPage> {
       _records[index] = record.copyWith(accountStatus: nextStatus);
     });
     final nextStatus = record.accountStatus == 'Aktif' ? 'Nonaktif' : 'Aktif';
-    // ignore: use_build_context_synchronously
-    if (mounted) _showToast(context, 'Status diperbarui', '${record.name} kini $nextStatus.', const Color(0xFF16A34A));
+    _showToast(context, 'Status diperbarui', '${record.name} kini $nextStatus.', const Color(0xFF16A34A));
   }
 
   void _showToast(BuildContext context, String title, String message, Color color) {
@@ -138,7 +137,6 @@ class _CustomerManagementPageState extends State<CustomerManagementPage> {
   }
 
   Future<void> _openDetail(BuildContext context, CustomerRecord record) async {
-    if (!mounted) return;
     final compact = MediaQuery.of(context).size.width < 1100;
     final content = _CustomerDetailPanel(
       record: record,
@@ -173,7 +171,6 @@ class _CustomerManagementPageState extends State<CustomerManagementPage> {
   }
 
   Future<void> _openEditor(BuildContext context, CustomerRecord? record) async {
-    if (!mounted) return;
     final compact = MediaQuery.of(context).size.width < 1100;
     final content = _CustomerEditPanel(
       record: record,
@@ -183,14 +180,12 @@ class _CustomerManagementPageState extends State<CustomerManagementPage> {
 
     final CustomerRecord? result = compact
         ? await showModalBottomSheet<CustomerRecord>(
-            // ignore: use_build_context_synchronously
             context: context,
             isScrollControlled: true,
             backgroundColor: Colors.transparent,
             builder: (_) => content,
           )
         : await showDialog<CustomerRecord>(
-            // ignore: use_build_context_synchronously
             context: context,
             barrierColor: Colors.black26,
             builder: (_) => Dialog(
@@ -206,8 +201,7 @@ class _CustomerManagementPageState extends State<CustomerManagementPage> {
         _records[index] = result;
       }
     });
-    // ignore: use_build_context_synchronously
-    if (mounted) _showToast(context, 'Berhasil', 'Data customer diperbarui.', const Color(0xFF16A34A));
+    _showToast(context, 'Berhasil', 'Data customer diperbarui.', const Color(0xFF16A34A));
   }
 }
 
@@ -260,10 +254,10 @@ class _StatCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 70,
-            height: 70,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(color: Color(stat.color), borderRadius: BorderRadius.circular(15)),
-            child: Icon(stat.icon, color: Colors.white, size: 44),
+            child: Icon(stat.icon, color: Colors.white, size: 30),
           ),
           const SizedBox(width: 14),
           Expanded(

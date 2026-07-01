@@ -1,4 +1,4 @@
-name: menusisa_dev
+﻿name: menusisa_dev
 description: "MenuSisa Super Admin Dashboard"
 publish_to: 'none'
 
@@ -21,6 +21,9 @@ dependencies:
 
   # Supabase
   supabase_flutter: ^2.9.1
+
+  # Local Storage
+  shared_preferences: ^2.3.4
 
   # SVG
   flutter_svg: ^2.2.0

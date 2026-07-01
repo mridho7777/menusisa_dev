@@ -1,4 +1,4 @@
-class ProductApprovalMetric {
+﻿class ProductApprovalMetric {
   final String title;
   final String value;
   final String delta;
@@ -40,6 +40,34 @@ class ProductApprovalItem {
     required this.imageUrl,
     required this.description,
   });
+
+  ProductApprovalItem copyWith({
+    String? id,
+    String? name,
+    String? productId,
+    String? merchant,
+    String? category,
+    String? price,
+    int? stock,
+    String? submittedAt,
+    String? status,
+    String? imageUrl,
+    String? description,
+  }) {
+    return ProductApprovalItem(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      productId: productId ?? this.productId,
+      merchant: merchant ?? this.merchant,
+      category: category ?? this.category,
+      price: price ?? this.price,
+      stock: stock ?? this.stock,
+      submittedAt: submittedAt ?? this.submittedAt,
+      status: status ?? this.status,
+      imageUrl: imageUrl ?? this.imageUrl,
+      description: description ?? this.description,
+    );
+  }
 }
 
 class ProductNotification {

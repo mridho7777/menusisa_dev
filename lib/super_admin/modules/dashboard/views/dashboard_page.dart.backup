@@ -32,7 +32,7 @@ class _DashboardPageState extends State<DashboardPage>
     super.initState();
     chartController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 900),
     )..forward();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -89,7 +89,6 @@ class _DashboardPageState extends State<DashboardPage>
                           chartProgress: chartController.value,
                           filter: controller.chartFilter,
                           onFilterChanged: controller.setChartFilter,
-                          sidebarCollapsed: menuProvider.sidebarCollapsed,
                         ),
                       ),
                       const SizedBox(height: 14),
@@ -101,10 +100,15 @@ class _DashboardPageState extends State<DashboardPage>
                         ),
                       ),
                       const SizedBox(height: 14),
+                      _SectionCard(
+                        child: _QuickActionGrid(actions: dashboardQuickActions),
+                      ),
+                      const SizedBox(height: 14),
                       LayoutBuilder(
                         builder: (context, sectionConstraints) {
-                          // Selalu gunakan layout vertikal, abaikan maxWidth
-                          if (true) {
+                          final localNarrow =
+                              sectionConstraints.maxWidth < 1250;
+                          if (localNarrow) {
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
@@ -131,7 +135,36 @@ class _DashboardPageState extends State<DashboardPage>
                             );
                           }
 
-                          // Removed - now always Column
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 4,
+                                child: DashboardTableCard(
+                                  title: 'Transaksi Terbaru',
+                                  actionLabel: 'Lihat Semua',
+                                  height: 440,
+                                  child: DashboardTransactionTable(
+                                    items: dashboardTransactions,
+                                    onTap: (tx) => controller
+                                        .setSelectedTransaction(tx.id),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                flex: 3,
+                                child: DashboardTableCard(
+                                  title: 'Top Merchant (Berdasarkan Penjualan)',
+                                  actionLabel: 'Lihat Semua',
+                                  height: 440,
+                                  child: DashboardMerchantList(
+                                    items: dashboardMerchants,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
                         },
                       ),
                     ],
@@ -159,42 +192,29 @@ class _DashboardHeaderBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Row(
+        const Expanded(
+          child: Text(
+            'Dashboard',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+          ),
+        ),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          alignment: WrapAlignment.end,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            const Expanded(
-              child: Text(
-                'Dashboard',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-              ),
+            SizedBox(
+              width: compact ? 180 : 220,
+              child: DashboardFilterBar(value: value, onChanged: onChanged),
             ),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              alignment: WrapAlignment.end,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                SizedBox(
-                  width: compact ? 180 : 220,
-                  child: DashboardFilterBar(value: value, onChanged: onChanged),
-                ),
-                const _CompactMetaChip(
-                  label: 'Hari Ini',
-                  icon: Icons.calendar_today_rounded,
-                ),
-              ],
+            const _CompactMetaChip(
+              label: 'Hari Ini',
+              icon: Icons.calendar_today_rounded,
             ),
           ],
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Kelola dan pantau performa platform secara realtime dan menyeluruh',
-          style: TextStyle(
-            fontSize: 14,
-            color: Color(0xFF6B7280),
-          ),
         ),
       ],
     );
@@ -206,48 +226,36 @@ class _ResponsiveAnalyticsSection extends StatelessWidget {
     required this.chartProgress,
     required this.filter,
     required this.onFilterChanged,
-    required this.sidebarCollapsed,
   });
 
   final double chartProgress;
   final String filter;
   final ValueChanged<String> onFilterChanged;
-  final bool sidebarCollapsed;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final verticalLayout = sidebarCollapsed == false;
+        final verticalLayout = constraints.maxWidth < 1120;
         final chart = _ChartCard(
           progress: chartProgress,
           filter: filter,
           onChanged: onFilterChanged,
-          sidebarCollapsed: sidebarCollapsed,
         );
-        final donut = _DonutCard(
-          progress: chartProgress,
-          sidebarCollapsed: sidebarCollapsed,
-        );
+        final donut = _DonutCard(progress: chartProgress);
 
         if (verticalLayout) {
           return Column(
-            key: ValueKey<bool>(verticalLayout),
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              chart,
-              const SizedBox(height: 14),
-              donut,
-            ],
+            children: [chart, const SizedBox(height: 14), donut],
           );
         }
 
         return Row(
-          key: ValueKey<bool>(verticalLayout),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(flex: 3, child: chart),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Expanded(flex: 2, child: donut),
           ],
         );
@@ -290,8 +298,8 @@ class _ResponsiveInfoPairSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(flex: 2, child: activityCard),
-            const SizedBox(width: 14),
-                      Expanded(flex: 2, child: quickInfo),
+            const SizedBox(width: 12),
+            Expanded(flex: 2, child: quickInfo),
           ],
         );
       },
@@ -299,7 +307,100 @@ class _ResponsiveInfoPairSection extends StatelessWidget {
   }
 }
 
+class _QuickActionGrid extends StatelessWidget {
+  const _QuickActionGrid({required this.actions});
 
+  final List<DashboardQuickAction> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth >= 1200 ? 4 : 2;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Aksi Cepat',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 14),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: actions.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: constraints.maxWidth >= 1200 ? 4.8 : 4.0,
+              ),
+              itemBuilder: (context, index) {
+                final action = actions[index];
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: const Color(
+                            0xFF0F8D55,
+                          ).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          _quickActionIcon(action.icon),
+                          color: const Color(0xFF0F8D55),
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          action.label,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+IconData _quickActionIcon(String icon) {
+  return switch (icon) {
+    'add' => Icons.add_rounded,
+    'person_add' => Icons.person_add_alt_1_rounded,
+    'campaign' => Icons.campaign_rounded,
+    'description' => Icons.description_rounded,
+    'summarize' => Icons.summarize_rounded,
+    'settings' => Icons.settings_rounded,
+    'local_offer' => Icons.local_offer_rounded,
+    'dashboard_customize' => Icons.dashboard_customize_rounded,
+    _ => Icons.flash_on_rounded,
+  };
+}
 
 class _SectionCard extends StatelessWidget {
   const _SectionCard({required this.child});
@@ -367,13 +468,11 @@ class _ChartCard extends StatelessWidget {
     required this.progress,
     required this.filter,
     required this.onChanged,
-    this.sidebarCollapsed = true,
   });
 
   final double progress;
   final String filter;
   final ValueChanged<String> onChanged;
-  final bool sidebarCollapsed;
 
   @override
   Widget build(BuildContext context) {
@@ -415,8 +514,7 @@ class _ChartCard extends StatelessWidget {
           Expanded(
             child: AnimatedOpacity(
               opacity: progress.clamp(0.2, 1),
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOutCubic,
+              duration: const Duration(milliseconds: 250),
               child: DashboardLineChart(progress: progress),
             ),
           ),
@@ -427,15 +525,14 @@ class _ChartCard extends StatelessWidget {
 }
 
 class _DonutCard extends StatelessWidget {
-  const _DonutCard({required this.progress, this.sidebarCollapsed = true});
+  const _DonutCard({required this.progress});
 
   final double progress;
-  final bool sidebarCollapsed;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: sidebarCollapsed ? 360 : 420,
+      height: 360,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,

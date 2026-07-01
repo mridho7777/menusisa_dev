@@ -17,7 +17,7 @@ class MerchantTopMerchantList extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 14,
-                backgroundColor: Color(item.color).withValues(alpha: 0.16),
+                backgroundColor: Color(item.color).withOpacity(0.16),
                 child: Text(
                   item.rank,
                   style: TextStyle(
@@ -171,10 +171,10 @@ class MerchantNotificationTray extends StatelessWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Color(item.color).withValues(alpha: 0.08),
+                      color: Color(item.color).withOpacity(0.08),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: Color(item.color).withValues(alpha: 0.24),
+                        color: Color(item.color).withOpacity(0.24),
                       ),
                     ),
                     child: Row(
@@ -184,7 +184,7 @@ class MerchantNotificationTray extends StatelessWidget {
                           radius: 13,
                           backgroundColor: Color(
                             item.color,
-                          ).withValues(alpha: 0.16),
+                          ).withOpacity(0.16),
                           child: Icon(
                             switch (item.subtitle.contains('ditolak') ||
                                 item.icon == 'cancel') {

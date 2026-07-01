@@ -286,33 +286,30 @@ class _CombinedTopMerchantNotification extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SectionShell(
-      child: SizedBox(
-        height: 300,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: MerchantFooterPanel(
-                title: 'Top 5 Merchant',
-                child: MerchantTopMerchantList(
-                  items: _mockTopMerchants,
-                ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: MerchantFooterPanel(
+              title: 'Top 5 Merchant',
+              child: MerchantTopMerchantList(
+                items: _mockTopMerchants,
               ),
             ),
-            Container(
-              width: 1,
-              height: 280,
-              margin: const EdgeInsets.symmetric(horizontal: 14),
-              color: const Color(0xFFE5E7EB),
+          ),
+          Container(
+            width: 1,
+            height: 280,
+            margin: const EdgeInsets.symmetric(horizontal: 14),
+            color: const Color(0xFFE5E7EB),
+          ),
+          Expanded(
+            child: MerchantFooterPanel(
+              title: 'Notifikasi Merchant',
+              child: const MerchantNotificationList(),
             ),
-            Expanded(
-              child: MerchantFooterPanel(
-                title: 'Notifikasi Merchant',
-                child: const MerchantNotificationList(),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -323,31 +320,28 @@ class _CombinedVerificationRevenue extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SectionShell(
-      child: SizedBox(
-        height: 300,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: MerchantFooterPanel(
-                title: 'Ringkasan Verifikasi Merchant',
-                child: const MerchantVerificationSummary(),
-              ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: MerchantFooterPanel(
+              title: 'Ringkasan Verifikasi Merchant',
+              child: const MerchantVerificationSummary(),
             ),
-            Container(
-              width: 1,
-              height: 280,
-              margin: const EdgeInsets.symmetric(horizontal: 14),
-              color: const Color(0xFFE5E7EB),
+          ),
+          Container(
+            width: 1,
+            height: 280,
+            margin: const EdgeInsets.symmetric(horizontal: 14),
+            color: const Color(0xFFE5E7EB),
+          ),
+          Expanded(
+            child: MerchantFooterPanel(
+              title: 'Ringkasan Pendapatan Merchant',
+              child: const MerchantRevenueSummary(),
             ),
-            Expanded(
-              child: MerchantFooterPanel(
-                title: 'Ringkasan Pendapatan Merchant',
-                child: const MerchantRevenueSummary(),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -789,3 +783,4 @@ class _FooterCardShell extends StatelessWidget {
         ),
       );
 }
+

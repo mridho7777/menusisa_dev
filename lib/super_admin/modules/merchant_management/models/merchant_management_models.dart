@@ -1,4 +1,4 @@
-class MerchantMetric {
+﻿class MerchantMetric {
   final String title;
   final String value;
   final String delta;
@@ -12,6 +12,58 @@ class MerchantMetric {
     required this.icon,
     required this.color,
   });
+}
+
+class MerchantRecord {
+  final String id;
+  final String merchantId;
+  final String shopName;
+  final String ownerName;
+  final String email;
+  final String phone;
+  final String status;
+  final String registeredAt;
+  final String totalProducts;
+  final String totalSales;
+
+  const MerchantRecord({
+    required this.id,
+    required this.merchantId,
+    required this.shopName,
+    required this.ownerName,
+    required this.email,
+    required this.phone,
+    required this.status,
+    required this.registeredAt,
+    required this.totalProducts,
+    required this.totalSales,
+  });
+
+  MerchantRecord copyWith({
+    String? id,
+    String? merchantId,
+    String? shopName,
+    String? ownerName,
+    String? email,
+    String? phone,
+    String? status,
+    String? registeredAt,
+    String? totalProducts,
+    String? totalSales,
+  }) {
+    return MerchantRecord(
+      id: id ?? this.id,
+      merchantId: merchantId ?? this.merchantId,
+      shopName: shopName ?? this.shopName,
+      ownerName: ownerName ?? this.ownerName,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      status: status ?? this.status,
+      registeredAt: registeredAt ?? this.registeredAt,
+      totalProducts: totalProducts ?? this.totalProducts,
+      totalSales: totalSales ?? this.totalSales,
+    );
+  }
 }
 
 class MerchantNotification {
@@ -52,6 +104,69 @@ class MerchantTopMerchant {
     required this.color,
   });
 }
+
+const merchantRecords = [
+  MerchantRecord(
+    id: '1',
+    merchantId: 'M-001',
+    shopName: 'Kopi Kita',
+    ownerName: 'Andi',
+    email: 'andi@kopikita.id',
+    phone: '0812-1111-1111',
+    status: 'Aktif',
+    registeredAt: '12 Mei 2025',
+    totalProducts: '18',
+    totalSales: 'Rp 8.250.000',
+  ),
+  MerchantRecord(
+    id: '2',
+    merchantId: 'M-002',
+    shopName: 'Burger Enak',
+    ownerName: 'Budi',
+    email: 'budi@burgerenak.id',
+    phone: '0813-2222-2222',
+    status: 'Pending',
+    registeredAt: '11 Mei 2025',
+    totalProducts: '12',
+    totalSales: 'Rp 6.750.000',
+  ),
+  MerchantRecord(
+    id: '3',
+    merchantId: 'M-003',
+    shopName: 'Ayam Geprek 99',
+    ownerName: 'Siti',
+    email: 'siti@geprek99.id',
+    phone: '0814-3333-3333',
+    status: 'Suspend',
+    registeredAt: '10 Mei 2025',
+    totalProducts: '11',
+    totalSales: 'Rp 5.450.000',
+  ),
+  MerchantRecord(
+    id: '4',
+    merchantId: 'M-004',
+    shopName: 'Pizza Mantap',
+    ownerName: 'Dina',
+    email: 'dina@pizzamantap.id',
+    phone: '0815-4444-4444',
+    status: 'Nonaktif',
+    registeredAt: '9 Mei 2025',
+    totalProducts: '9',
+    totalSales: 'Rp 4.850.000',
+  ),
+  MerchantRecord(
+    id: '5',
+    merchantId: 'M-005',
+    shopName: 'Sushi Premium',
+    ownerName: 'Raka',
+    email: 'raka@sushipremium.id',
+    phone: '0816-5555-5555',
+    status: 'Aktif',
+    registeredAt: '8 Mei 2025',
+    totalProducts: '7',
+    totalSales: 'Rp 3.950.000',
+  ),
+];
 
 const merchantMetrics = [
   MerchantMetric(
