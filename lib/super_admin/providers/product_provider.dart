@@ -1,11 +1,10 @@
-﻿import 'package:flutter/material.dart';
-import '../core/services/data_sync_service.dart';
-import '../core/services/local_storage_service.dart';
+import 'package:flutter/material.dart';
+import '../repositories/product_repository.dart';
 
 /// Provider untuk Product Management
 class ProductProvider extends ChangeNotifier {
-  final _syncService = DataSyncService.instance;
-  
+  final ProductRepository _repository = ProductRepository();
+
   List<Map<String, dynamic>> _products = [];
   List<Map<String, dynamic>> get products => _products;
 
@@ -21,6 +20,9 @@ class ProductProvider extends ChangeNotifier {
   String _categoryFilter = 'Semua';
   String get categoryFilter => _categoryFilter;
 
+  String _statusFilter = 'Semua';
+  String get statusFilter => _statusFilter;
+
   ProductProvider() {
     loadProducts();
   }
@@ -31,85 +33,127 @@ class ProductProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _products = await _syncService.fetchData(
-        StorageKeys.products,
-        'products', // Supabase table name
-      );
+      _products = await _repository.getAll();
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ ProductProvider loadProducts error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> addProduct(Map<String, dynamic> product) async {
+  Future<bool> addProduct(Map<String, dynamic> product) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final result = await _syncService.addItem(
-        StorageKeys.products,
-        'products',
-        product,
-      );
-      if (result != null) {
-        _products.insert(0, result);
-      }
+      final result = await _repository.create(product);
+      _products.insert(0, result);
+      notifyListeners();
+      return true;
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ ProductProvider addProduct error: $e');
+      notifyListeners();
+      return false;
     } finally {
       _isLoading = false;
-      notifyListeners();
     }
   }
 
-  Future<void> updateProduct(String id, Map<String, dynamic> product) async {
+  Future<bool> updateProduct(String id, Map<String, dynamic> product) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final result = await _syncService.updateItem(
-        StorageKeys.products,
-        'products',
-        id,
-        product,
-      );
-      if (result != null) {
-        final index = _products.indexWhere((p) => p['id'] == id);
-        if (index != -1) {
-          _products[index] = result;
-        }
+      final result = await _repository.update(id, product);
+      final index = _products.indexWhere((p) => p['id'] == id);
+      if (index != -1) {
+        _products[index] = result;
       }
+      notifyListeners();
+      return true;
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ ProductProvider updateProduct error: $e');
+      notifyListeners();
+      return false;
     } finally {
       _isLoading = false;
-      notifyListeners();
     }
   }
 
-  Future<void> deleteProduct(String id) async {
+  Future<bool> deleteProduct(String id) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final success = await _syncService.deleteItem(
-        StorageKeys.products,
-        'products',
-        id,
-      );
-      if (success) {
-        _products.removeWhere((p) => p['id'] == id);
-      }
+      await _repository.delete(id);
+      _products.removeWhere((p) => p['id'] == id);
+      notifyListeners();
+      return true;
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ ProductProvider deleteProduct error: $e');
+      notifyListeners();
+      return false;
     } finally {
       _isLoading = false;
+    }
+  }
+
+  Future<bool> approveProduct(String id) async {
+    try {
+      final updated = await _repository.approve(id);
+      final index = _products.indexWhere((p) => p['id'] == id);
+      if (index != -1) {
+        _products[index] = updated;
+      }
+      await loadProducts();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      debugPrint('? ProductProvider approveProduct error: $e');
       notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> publishProduct(String id) async {
+    try {
+      final updated = await _repository.publishToCustomer(id);
+      final index = _products.indexWhere((p) => p['id'] == id);
+      if (index != -1) {
+        _products[index] = updated;
+      }
+      await loadProducts();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      debugPrint('? ProductProvider publishProduct error: $e');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> rejectProduct(String id, String reason) async {
+    try {
+      final updated = await _repository.reject(id, reason);
+      final index = _products.indexWhere((p) => p['id'] == id);
+      if (index != -1) {
+        _products[index] = updated;
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      debugPrint('❌ ProductProvider rejectProduct error: $e');
+      notifyListeners();
+      return false;
     }
   }
 
@@ -123,6 +167,11 @@ class ProductProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setStatusFilter(String status) {
+    _statusFilter = status;
+    notifyListeners();
+  }
+
   List<Map<String, dynamic>> get filteredProducts {
     var filtered = List<Map<String, dynamic>>.from(_products);
 
@@ -130,14 +179,36 @@ class ProductProvider extends ChangeNotifier {
       final query = _searchQuery.toLowerCase();
       filtered = filtered.where((p) {
         return (p['name']?.toString().toLowerCase().contains(query) ?? false) ||
-            (p['description']?.toString().toLowerCase().contains(query) ?? false);
+            (p['description']?.toString().toLowerCase().contains(query) ??
+                false) ||
+            (p['product_code']?.toString().toLowerCase().contains(query) ??
+                false);
       }).toList();
     }
 
     if (_categoryFilter != 'Semua') {
-      filtered = filtered.where((p) => p['category'] == _categoryFilter).toList();
+      filtered = filtered
+          .where((p) => p['category_id'] == _categoryFilter)
+          .toList();
+    }
+
+    if (_statusFilter != 'Semua') {
+      filtered = filtered
+          .where((p) => p['approval_status'] == _statusFilter)
+          .toList();
     }
 
     return filtered;
   }
+
+  // Metrics
+  int get totalProducts => _products.length;
+  int get pendingProducts =>
+      _products.where((p) => p['approval_status'] == 'pending').length;
+  int get approvedProducts =>
+      _products.where((p) => p['approval_status'] == 'approved').length;
+  int get rejectedProducts =>
+      _products.where((p) => p['approval_status'] == 'rejected').length;
+  int get activeProducts =>
+      _products.where((p) => p['is_active'] == true).length;
 }

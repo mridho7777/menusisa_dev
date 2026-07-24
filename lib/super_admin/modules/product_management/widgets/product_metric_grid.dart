@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../models/product_management_models.dart';
 
@@ -11,7 +11,7 @@ class ProductMetricGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth >= 1180 ? 3 : 2;
+        final crossAxisCount = 3;
         final childAspectRatio = constraints.maxWidth >= 1500
             ? 3.6
             : constraints.maxWidth >= 1180
@@ -113,16 +113,21 @@ class _MetricCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Flexible(
-                        fit: FlexFit.loose,
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF16A34A),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
                         child: Text(
                           metric.delta,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF16A34A),
+                            fontSize: 11,
+                            color: Colors.white,
                             fontWeight: FontWeight.w600,
                           ),
                         ),

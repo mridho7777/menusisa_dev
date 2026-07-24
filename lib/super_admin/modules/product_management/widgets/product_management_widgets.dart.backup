@@ -113,47 +113,43 @@ class ProductToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 1;
-        return Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            SizedBox(
-              width: isNarrow ? constraints.maxWidth : constraints.maxWidth * 0.5,
-              child: TextField(
-                onChanged: onSearchChanged,
-                decoration: InputDecoration(
-                  hintText: 'Cari produk...',
-                  hintStyle: const TextStyle(fontSize: 13),
-                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                ),
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            onChanged: onSearchChanged,
+            decoration: InputDecoration(
+              hintText: 'Cari produk...',
+              hintStyle: const TextStyle(fontSize: 13),
+              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        ...actions.map((action) {
+          final icon = switch (action) {
+            'Import Data' => Icons.upload_rounded,
+            'Refresh' => Icons.refresh_rounded,
+            'Filter Lanjutan' => Icons.filter_list_rounded,
+            'Laporan' => Icons.summarize_rounded,
+            _ => Icons.circle,
+          };
+          return Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: OutlinedButton.icon(
+              onPressed: () => onActionTap(action),
+              icon: Icon(icon, size: 18),
+              label: Text(action),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
             ),
-            ...actions.map((action) {
-              final icon = switch (action) {
-                'Import Data' => Icons.upload_rounded,
-                'Refresh' => Icons.refresh_rounded,
-                'Filter Lanjutan' => Icons.filter_list_rounded,
-                'Laporan' => Icons.summarize_rounded,
-                _ => Icons.circle,
-              };
-              return OutlinedButton.icon(
-                onPressed: () => onActionTap(action),
-                icon: Icon(icon, size: 18),
-                label: Text(action, style: const TextStyle(fontSize: 13)),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                ),
-              );
-            }),
-          ],
-        );
-      },
+          );
+        }),
+      ],
     );
   }
 }
@@ -197,7 +193,7 @@ class ProductCombinedChartCard extends StatelessWidget {
           const SizedBox(height: 14),
           LayoutBuilder(
             builder: (context, constraints) {
-              final stacked = constraints.maxWidth < 1;
+              final stacked = !sidebarCollapsed || constraints.maxWidth < 1180;
               final chartArea = _ChartArea(progress: progress);
               final donutArea = _DonutArea(progress: progress);
               if (stacked) {
@@ -503,23 +499,19 @@ class _LegendItem extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+            ),
+          ],
         ),
       ],
     );
@@ -591,7 +583,7 @@ class ProductActionGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = 3;
+        final crossAxisCount = constraints.maxWidth < 700 ? 2 : 3;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -749,6 +741,4 @@ class ProductNotificationTray extends StatelessWidget {
     );
   }
 }
-
-
 
