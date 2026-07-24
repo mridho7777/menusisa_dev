@@ -21,7 +21,7 @@ class DashboardTopSummary extends StatelessWidget {
       child: LayoutBuilder(
         key: ValueKey<bool>(sidebarCollapsed),
         builder: (context, constraints) {
-          final crossAxisCount = sidebarCollapsed ? 4 : 2;
+          final crossAxisCount = 4;
           final itemHeight = sidebarCollapsed ? 88.0 : 96.0;
           return GridView.builder(
             shrinkWrap: true,
