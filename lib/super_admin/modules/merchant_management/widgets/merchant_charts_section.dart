@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'merchant_content_widgets.dart';
 
 class MerchantChartsSection extends StatelessWidget {
@@ -36,97 +36,154 @@ class MerchantChartsSection extends StatelessWidget {
   }
 
   Widget _buildStackedLayout() {
+    final chartHeight = chartFilter == '30 Hari Terakhir' ? 176.0 : 170.0;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildChartCard(
-          title: 'Grafik Pendaftaran Merchant',
-          child: MerchantRegistrationChart(progress: chartProgress),
-          showFilter: true,
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Grafik Pendaftaran & Status Merchant',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+            ),
+            _FilterDropdown(value: chartFilter, onChanged: onFilterChanged),
+          ],
         ),
-        const SizedBox(height: 16),
-        _buildChartCard(
-          title: 'Distribusi Status Merchant',
-          child: const MerchantDistributionDonut(progress: 1),
-          showFilter: false,
+        const SizedBox(height: 14),
+        Container(
+          height: chartHeight,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Grafik Pendaftaran Merchant',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: MerchantRegistrationChart(progress: chartProgress),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        Container(
+          height: chartHeight,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Status Merchant',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 10),
+              Expanded(child: const MerchantDistributionDonut(progress: 1)),
+            ],
+          ),
         ),
       ],
     );
   }
 
   Widget _buildHorizontalLayout() {
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          flex: 2,
-          child: _buildChartCard(
-            title: 'Grafik Pendaftaran Merchant',
-            child: MerchantRegistrationChart(progress: chartProgress),
-            showFilter: true,
-          ),
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Grafik Pendaftaran & Status Merchant',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+            ),
+            _FilterDropdown(value: chartFilter, onChanged: onFilterChanged),
+          ],
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 1,
-          child: _buildChartCard(
-            title: 'Distribusi Status Merchant',
-            child: const MerchantDistributionDonut(progress: 1),
-            showFilter: false,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildChartCard({
-    required String title,
-    required Widget child,
-    required bool showFilter,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFAFBFC),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
+        const SizedBox(height: 14),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: Container(
+                height: 176,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Grafik Pendaftaran Merchant',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Expanded(
+                      child: MerchantRegistrationChart(progress: chartProgress),
+                    ),
+                  ],
                 ),
               ),
-              if (showFilter)
-                _FilterDropdown(
-                  value: chartFilter,
-                  onChanged: onFilterChanged,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              flex: 2,
+              child: Container(
+                height: 176,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
                 ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 280,
-            child: child,
-          ),
-        ],
-      ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Status Merchant',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Expanded(
+                      child: const MerchantDistributionDonut(progress: 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
 
 class _FilterDropdown extends StatelessWidget {
-  const _FilterDropdown({
-    required this.value,
-    required this.onChanged,
-  });
+  const _FilterDropdown({required this.value, required this.onChanged});
 
   final String value;
   final ValueChanged<String> onChanged;
@@ -134,7 +191,7 @@ class _FilterDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
@@ -149,13 +206,12 @@ class _FilterDropdown extends StatelessWidget {
             color: Color(0xFF374151),
             fontWeight: FontWeight.w500,
           ),
-          items: const [
-            '30 Hari Terakhir',
-            '7 Hari Terakhir',
-            '1 Hari Terakhir',
-          ]
-              .map((item) => DropdownMenuItem(value: item, child: Text(item)))
-              .toList(),
+          items:
+              const ['30 Hari Terakhir', '7 Hari Terakhir', '1 Hari Terakhir']
+                  .map(
+                    (item) => DropdownMenuItem(value: item, child: Text(item)),
+                  )
+                  .toList(),
           onChanged: (val) {
             if (val != null) onChanged(val);
           },

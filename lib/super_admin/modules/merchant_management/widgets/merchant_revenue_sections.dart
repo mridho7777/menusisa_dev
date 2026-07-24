@@ -70,15 +70,15 @@ class MerchantCombinedChartCard extends StatelessWidget {
           const SizedBox(height: 14),
           LayoutBuilder(
             builder: (context, constraints) {
-              final stacked = !sidebarCollapsed || constraints.maxWidth < 1180;
+              final stacked = constraints.maxWidth < 1;
               final chartArea = _ChartArea(progress: progress);
               final donutArea = _DonutArea(progress: progress);
               if (stacked) {
                 return Column(
                   children: [
-                    SizedBox(height: 300, child: chartArea),
+                    SizedBox(height: 210, child: chartArea),
                     const SizedBox(height: 16),
-                    SizedBox(height: 300, child: donutArea),
+                    SizedBox(height: 210, child: donutArea),
                   ],
                 );
               }
@@ -87,12 +87,12 @@ class MerchantCombinedChartCard extends StatelessWidget {
                 children: [
                   Expanded(
                     flex: 3,
-                    child: SizedBox(height: 330, child: chartArea),
+                    child: SizedBox(height: 210, child: chartArea),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     flex: 2,
-                    child: SizedBox(height: 330, child: donutArea),
+                    child: SizedBox(height: 210, child: donutArea),
                   ),
                 ],
               );
@@ -115,7 +115,7 @@ class _FilterChip extends StatelessWidget {
     return DropdownButtonHideUnderline(
       child: DropdownButton<String>(
         value: value,
-        items: const ['30 Hari Terakhir', '7 Hari Terakhir', 'Hari Ini']
+        items: const ['7 Hari Terakhir', 'Hari Ini']
             .map(
               (item) => DropdownMenuItem(
                 value: item,

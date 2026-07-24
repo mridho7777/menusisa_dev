@@ -1,3 +1,4 @@
+import 'package:menusisa_dev/super_admin/shared/widgets/admin_toast.dart';
 import 'package:flutter/material.dart';
 
 Future<void> showMerchantActionPopup(
@@ -44,7 +45,5 @@ Future<void> showMerchantActionSnackBar(
   String message,
 ) async {
   ScaffoldMessenger.of(context).clearSnackBars();
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
-  );
+  AdminToast.show(context, 'Tindakan berhasil', type: AdminToastType.success);
 }

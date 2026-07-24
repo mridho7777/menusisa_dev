@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class MerchantRowData {
   final String no;
@@ -36,7 +36,7 @@ class MerchantDataTableSection extends StatelessWidget {
 
   final List<MerchantRowData> rows;
   final bool compact;
-  final Function(String) onAction;
+  final Function(String, String) onAction; // (action, merchantId)
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +55,7 @@ class MerchantDataTableSection extends StatelessWidget {
               ),
             ),
             Text(
-              'Menampilkan 1 - ${rows.length} dari 128 data',
+              'Menampilkan 1 - ${rows.length} dari ${rows.length} data',
               style: const TextStyle(
                 fontSize: 13,
                 color: Color(0xFF6B7280),
@@ -100,7 +100,7 @@ class MerchantDataTableSection extends StatelessWidget {
               return DataRow(
                 cells: [
                   DataCell(Text(row.no)),
-                  DataCell(Text(row.id)),
+                  DataCell(Text(row.id.length > 8 ? '${row.id.substring(0, 8)}...' : row.id)),
                   DataCell(
                     Text(
                       row.shop,
@@ -111,7 +111,7 @@ class MerchantDataTableSection extends StatelessWidget {
                   DataCell(Text(row.email)),
                   DataCell(Text(row.phone)),
                   DataCell(_StatusBadge(status: row.status)),
-                  DataCell(Text(row.date)),
+                  DataCell(Text(row.date.split('T').first)), // Hanya ambil tanggalnya
                   DataCell(Text(row.products)),
                   DataCell(
                     Text(
@@ -124,7 +124,8 @@ class MerchantDataTableSection extends StatelessWidget {
                   ),
                   DataCell(
                     _ActionMenu(
-                      merchantName: row.shop,
+                      merchantId: row.id,
+                      status: row.status,
                       onAction: onAction,
                     ),
                   ),
@@ -147,26 +148,44 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = switch (status) {
-      'Aktif' => (color: const Color(0xFF0F8D55), bg: const Color(0xFFD1FAE5)),
-      'Pending' => (color: const Color(0xFFF59E0B), bg: const Color(0xFFFEF3C7)),
-      'Suspend' => (color: const Color(0xFF7C3AED), bg: const Color(0xFFEDE9FE)),
-      'Nonaktif' => (color: const Color(0xFFEF4444), bg: const Color(0xFFFEE2E2)),
-      _ => (color: const Color(0xFF6B7280), bg: const Color(0xFFF3F4F6)),
-    };
+    final String label;
+    final Color color;
+    final Color bg;
+
+    if (status.toLowerCase() == 'approved' || status.toLowerCase() == 'active') {
+      label = 'Aktif';
+      color = const Color(0xFF0F8D55);
+      bg = const Color(0xFFD1FAE5);
+    } else if (status.toLowerCase() == 'pending') {
+      label = 'Pending';
+      color = const Color(0xFFF59E0B);
+      bg = const Color(0xFFFEF3C7);
+    } else if (status.toLowerCase() == 'suspended') {
+      label = 'Suspend';
+      color = const Color(0xFF7C3AED);
+      bg = const Color(0xFFEDE9FE);
+    } else if (status.toLowerCase() == 'rejected' || status.toLowerCase() == 'inactive') {
+      label = 'Nonaktif';
+      color = const Color(0xFFEF4444);
+      bg = const Color(0xFFFEE2E2);
+    } else {
+      label = status;
+      color = const Color(0xFF6B7280);
+      bg = const Color(0xFFF3F4F6);
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: config.bg,
+        color: bg,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        status,
+        label,
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: config.color,
+          color: color,
         ),
       ),
     );
@@ -175,12 +194,14 @@ class _StatusBadge extends StatelessWidget {
 
 class _ActionMenu extends StatelessWidget {
   const _ActionMenu({
-    required this.merchantName,
+    required this.merchantId,
+    required this.status,
     required this.onAction,
   });
 
-  final String merchantName;
-  final Function(String) onAction;
+  final String merchantId;
+  final String status;
+  final Function(String, String) onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -188,17 +209,29 @@ class _ActionMenu extends StatelessWidget {
       icon: const Icon(Icons.more_vert_rounded, size: 20),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       offset: const Offset(0, 40),
-      onSelected: (action) => onAction('$action - $merchantName'),
-      itemBuilder: (context) => [
-        _buildMenuItem(Icons.visibility_rounded, 'Detail Merchant', 'detail'),
-        _buildMenuItem(Icons.edit_rounded, 'Edit Merchant', 'edit'),
-        _buildMenuItem(Icons.shopping_bag_rounded, 'Lihat Produk', 'products'),
-        _buildMenuItem(Icons.verified_rounded, 'Approve Merchant', 'approve'),
-        _buildMenuItem(Icons.block_rounded, 'Suspend Merchant', 'suspend'),
-        _buildMenuItem(Icons.notifications_rounded, 'Kirim Notifikasi', 'notify'),
-        const PopupMenuDivider(),
-        _buildMenuItem(Icons.delete_rounded, 'Hapus Merchant', 'delete', isDestructive: true),
-      ],
+      onSelected: (action) => onAction(action, merchantId),
+      itemBuilder: (context) {
+        final isPending = status.toLowerCase() == 'pending';
+        
+        return [
+          _buildMenuItem(Icons.visibility_rounded, 'Detail Merchant', 'detail'),
+          _buildMenuItem(Icons.edit_rounded, 'Edit Merchant', 'edit'),
+          
+          if (isPending) ...[
+            const PopupMenuDivider(),
+            _buildMenuItem(Icons.verified_rounded, 'Approve Merchant', 'approve'),
+            _buildMenuItem(Icons.cancel_rounded, 'Reject Merchant', 'reject', isDestructive: true),
+          ],
+          
+          if (!isPending) ...[
+            _buildMenuItem(Icons.shopping_bag_rounded, 'Lihat Produk', 'products'),
+            _buildMenuItem(Icons.block_rounded, 'Suspend Merchant', 'suspend'),
+            _buildMenuItem(Icons.notifications_rounded, 'Kirim Notifikasi', 'notify'),
+            const PopupMenuDivider(),
+            _buildMenuItem(Icons.delete_rounded, 'Hapus Merchant', 'delete', isDestructive: true),
+          ]
+        ];
+      },
     );
   }
 
@@ -262,13 +295,7 @@ class _PaginationControls extends StatelessWidget {
               icon: Icons.chevron_left_rounded,
               onPressed: () {},
             ),
-            ...[1, 2, 3, 4, 5, '...', 16].map((page) {
-              if (page == '...') {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4),
-                  child: Text('...', style: TextStyle(color: Color(0xFF6B7280))),
-                );
-              }
+            ...[1].map((page) {
               return _PageButton(
                 label: '$page',
                 isActive: page == 1,

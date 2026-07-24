@@ -1,14 +1,18 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:menusisa_dev/super_admin/shared/widgets/admin_toast.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/routes/app_routes.dart';
 import '../../../providers/menu_provider.dart';
 import '../../../providers/merchant_provider.dart';
+import '../../../providers/notifications_provider.dart';
 import '../models/merchant_management_models.dart';
 import '../widgets/merchant_content_widgets.dart'
     show MerchantDistributionDonut, MerchantRegistrationChart;
-import '../widgets/merchant_footer_sections.dart';
+import '../widgets/merchant_footer_sections.dart' as footer;
+import '../widgets/merchant_lists_and_actions.dart';
 import '../widgets/merchant_table_section.dart';
+import '../widgets/merchant_metric_grid_new.dart';
 
 class MerchantManagementPage extends StatefulWidget {
   const MerchantManagementPage({super.key});
@@ -32,7 +36,10 @@ class _MerchantManagementPageState extends State<MerchantManagementPage>
       duration: const Duration(milliseconds: 600),
     )..forward();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<MenuProvider>().setRoute(AppRoutes.merchants);
+      if (mounted) {
+        context.read<MenuProvider>().setRoute(AppRoutes.merchants);
+        context.read<MerchantProvider>().loadMerchants();
+      }
     });
   }
 
@@ -43,11 +50,96 @@ class _MerchantManagementPageState extends State<MerchantManagementPage>
     super.dispose();
   }
 
-  void _toast(String message) {
+  void _toast(String message, {bool error = false}) {
     ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    AdminToast.show(
+      context, 
+      message, 
+      type: error ? AdminToastType.error : AdminToastType.success
     );
+  }
+
+  void _addNotification(String title, String message, String type) {
+    context.read<NotificationsProvider>().addNotification({
+      'title': title,
+      'message': message,
+      'type': type,
+      'entity_type': 'merchant',
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<void> _handleApprove(String merchantId, String shopName) async {
+    final merchantProvider = context.read<MerchantProvider>();
+    final success = await merchantProvider.approveMerchant(merchantId);
+    if (!mounted) return;
+    if (success) {
+      _toast('Merchant "$shopName" berhasil disetujui');
+      _addNotification(
+        'Merchant Disetujui',
+        'Toko "$shopName" telah aktif dan dapat mulai berjualan.',
+        'merchant_approved',
+      );
+    } else {
+      _toast('Gagal menyetujui merchant', error: true);
+    }
+  }
+
+  Future<void> _handleReject(String merchantId, String shopName) async {
+    final reasonController = TextEditingController();
+    final merchantProvider = context.read<MerchantProvider>();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Tolak Pendaftaran Toko'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Apakah Anda yakin ingin menolak toko "$shopName"?'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: 'Alasan Penolakan',
+                border: OutlineInputBorder(),
+                hintText: 'Contoh: Dokumen tidak valid / toko palsu',
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Tolak', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      final reason = reasonController.text.trim().isEmpty ? 'Alasan tidak spesifik' : reasonController.text.trim();
+      final success = await merchantProvider.rejectMerchant(merchantId, reason);
+      if (!mounted) return;
+      if (success) {
+        // ignore: use_build_context_synchronously
+        _toast('Pendaftaran Toko "$shopName" telah ditolak');
+        _addNotification(
+          'Merchant Ditolak',
+          'Pendaftaran toko "$shopName" ditolak. Alasan: $reason',
+          'merchant_rejected',
+        );
+      } else {
+        _toast('Gagal menolak merchant', error: true);
+      }
+    }
+    reasonController.dispose();
   }
 
   @override
@@ -56,17 +148,57 @@ class _MerchantManagementPageState extends State<MerchantManagementPage>
     final merchantProvider = context.watch<MerchantProvider>();
     final filtered = merchantProvider.filteredMerchants;
 
+    // Hitung metrics dynamic
+    final metrics = [
+      MerchantMetric(
+        title: 'Total Merchant',
+        value: merchantProvider.totalMerchants.toString(),
+        delta: '+0%',
+        icon: 'storefront',
+        color: 0xFF16A34A,
+      ),
+      MerchantMetric(
+        title: 'Merchant Aktif',
+        value: merchantProvider.approvedMerchants.toString(),
+        delta: '+0%',
+        icon: 'check_circle',
+        color: 0xFF0F8D55,
+      ),
+      MerchantMetric(
+        title: 'Menunggu Persetujuan',
+        value: merchantProvider.pendingMerchants.toString(),
+        delta: '+0%',
+        icon: 'pending',
+        color: 0xFFF59E0B,
+      ),
+      MerchantMetric(
+        title: 'Ditolak/Nonaktif',
+        value: merchantProvider.rejectedMerchants.toString(),
+        delta: '+0%',
+        icon: 'cancel',
+        color: 0xFFEF4444,
+      ),
+      MerchantMetric(
+        title: 'Pendaftar Baru',
+        value: '12',
+        delta: '+5%',
+        icon: 'person_add',
+        color: 0xFF3B82F6,
+      ),
+      MerchantMetric(
+        title: 'Toko Dibekukan',
+        value: '0',
+        delta: '0%',
+        icon: 'lock',
+        color: 0xFF6B7280,
+      ),
+    ];
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final compact = width < 1180;
+        const compact = false;
         return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            width < 900 ? 16 : 24,
-            18,
-            width < 900 ? 16 : 24,
-            20,
-          ),
+          padding: const EdgeInsets.fromLTRB(24, 18, 24, 20),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1680),
@@ -74,6 +206,14 @@ class _MerchantManagementPageState extends State<MerchantManagementPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const _HeaderBar(),
+                  const SizedBox(height: 14),
+                  
+                  _SectionShell(
+                    child: MerchantMetricGrid(
+                      metrics: metrics,
+                      sidebarCollapsed: sidebarCollapsed,
+                    ),
+                  ),
                   const SizedBox(height: 14),
                   
                   // Tabel dengan toolbar di dalamnya
@@ -89,11 +229,11 @@ class _MerchantManagementPageState extends State<MerchantManagementPage>
                           onStatusChanged: merchantProvider.setStatusFilter,
                           onCategoryChanged: (v) {
                             setState(() => _categoryFilter = v);
-                            _toast('Filter kategori $v siap digunakan');
+                            _toast('Filter kategori siap digunakan');
                           },
                           onDateChanged: (v) {
                             setState(() => _dateFilter = v);
-                            _toast('Filter tanggal $v siap digunakan');
+                            _toast('Filter tanggal siap digunakan');
                           },
                           onReset: () {
                             _searchController.clear();
@@ -107,48 +247,64 @@ class _MerchantManagementPageState extends State<MerchantManagementPage>
                           },
                         ),
                         const SizedBox(height: 14),
-                        MerchantDataTableSection(
-                          rows: filtered
-                              .map((m) => MerchantRowData(
-                                    (filtered.indexOf(m) + 1).toString(),
-                                    m.id,
-                                    m.shopName,
-                                    m.ownerName,
-                                    m.email,
-                                    m.phone,
-                                    m.status,
-                                    m.registeredAt,
-                                    m.totalProducts,
-                                    m.totalSales,
-                                  ))
-                              .toList(),
-                          onAction: (msg) => _toast(msg),
-                        ),
+                        
+                        if (merchantProvider.isLoading)
+                          const Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: Center(child: CircularProgressIndicator(color: Color(0xFF16A34A))),
+                          )
+                        else if (filtered.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: Center(child: Text('Tidak ada merchant ditemukan')),
+                          )
+                        else
+                          MerchantDataTableSection(
+                            rows: filtered
+                                .map((m) => MerchantRowData(
+                                      (filtered.indexOf(m) + 1).toString(),
+                                      m.id,
+                                      m.shopName,
+                                      m.ownerName,
+                                      m.email,
+                                      m.phone,
+                                      m.status,
+                                      m.registeredAt,
+                                      m.totalProducts,
+                                      m.totalSales,
+                                    ))
+                                .toList(),
+                            onAction: (action, id) {
+                              final merchant = filtered.firstWhere((m) => m.id == id);
+                              if (action == 'approve') {
+                                _handleApprove(id, merchant.shopName);
+                              } else if (action == 'reject') {
+                                _handleReject(id, merchant.shopName);
+                              } else if (action == 'delete') {
+                                () async {
+                                  final merchantProvider = context.read<MerchantProvider>();
+                                  await merchantProvider.deleteMerchant(id);
+                                  if (!mounted) return;
+                                  _toast('Merchant "${merchant.shopName}" berhasil dihapus');
+                                }();
+                              } else {
+                                _toast('Aksi: $action');
+                              }
+                            },
+                          ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 14),
                   
-                  _MetricsGrid(compact: compact),
-                  const SizedBox(height: 14),
-                  
+                  // Charts section
                   _ChartsRow(
                     chartFilter: _chartFilter,
-                    onChartFilterChanged: (v) {
-                      setState(() => _chartFilter = v);
-                      chartController.reset();
-                      chartController.forward();
-                    },
+                    onChartFilterChanged: (v) => setState(() => _chartFilter = v),
                     chartController: chartController,
                     stacked: compact,
                   ),
-                  const SizedBox(height: 14),
-                  
-                  // Layout footer baru dengan responsive grid
-                  _ResponsiveFooterLayout(
-                    sidebarCollapsed: sidebarCollapsed,
-                    width: width,
-                  ),
+
                 ],
               ),
             ),
@@ -162,11 +318,45 @@ class _MerchantManagementPageState extends State<MerchantManagementPage>
 class _HeaderBar extends StatelessWidget {
   const _HeaderBar();
   @override
-  Widget build(BuildContext context) => const Row(
+  Widget build(BuildContext context) => Row(
         children: [
-          Text(
-            'Daftar Merchant',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Merchant Management',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Kelola semua merchant yang terdaftar',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.calendar_today, size: 16, color: Color(0xFF4B5563)),
+                SizedBox(width: 8),
+                Text(
+                  '19 Juli 2026',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       );
@@ -177,220 +367,45 @@ class _SectionShell extends StatelessWidget {
   final Widget child;
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: const Color(0xFFE5E7EB)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x08000000),
-              offset: Offset(0, 1),
-              blurRadius: 3,
-            ),
-          ],
         ),
+        padding: const EdgeInsets.all(16),
         child: child,
       );
 }
 
-// Responsive Footer Layout dengan grid 3-2
-class _ResponsiveFooterLayout extends StatelessWidget {
-  const _ResponsiveFooterLayout({
-    required this.sidebarCollapsed,
-    required this.width,
-  });
-  
-  final bool sidebarCollapsed;
-  final double width;
-  
+class _FooterCardShell extends StatelessWidget {
+  const _FooterCardShell({required this.title, required this.child});
+  final String title;
+  final Widget child;
   @override
-  Widget build(BuildContext context) {
-    // Jika sidebar terbuka atau layar sempit, tampilkan vertikal
-    final showVertical = !sidebarCollapsed || width < 1280;
-    
-    if (showVertical) {
-      return Column(
-        children: [
-          _CombinedTopMerchantNotification(),
-          const SizedBox(height: 14),
-          _FooterCardShell(
-            title: 'Aktivitas Terbaru Merchant',
-            child: const MerchantRecentActivityList(),
-          ),
-          const SizedBox(height: 14),
-          _CombinedVerificationRevenue(),
-        ],
+  Widget build(BuildContext context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF111827),
+              ),
+            ),
+            const SizedBox(height: 16),
+            child,
+          ],
+        ),
       );
-    }
-    
-    // Layout horizontal 3 kolom + 2 kolom
-    return Column(
-      children: [
-        // Baris pertama: 3 kolom
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: _FooterCardShell(
-                title: 'Top 5 Merchant',
-                child: MerchantTopMerchantList(
-                  items: _mockTopMerchants,
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _FooterCardShell(
-                title: 'Notifikasi Merchant',
-                child: const MerchantNotificationList(),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _FooterCardShell(
-                title: 'Aktivitas Terbaru Merchant',
-                child: const MerchantRecentActivityList(),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        
-        // Baris kedua: 2 kolom
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: _FooterCardShell(
-                title: 'Ringkasan Verifikasi Merchant',
-                child: const MerchantVerificationSummary(),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _FooterCardShell(
-                title: 'Ringkasan Pendapatan Merchant',
-                child: const MerchantRevenueSummary(),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 }
-
-// Widget gabungan Top Merchant + Notifikasi
-class _CombinedTopMerchantNotification extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return _SectionShell(
-      child: SizedBox(
-        height: 300,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: MerchantFooterPanel(
-                title: 'Top 5 Merchant',
-                child: MerchantTopMerchantList(
-                  items: _mockTopMerchants,
-                ),
-              ),
-            ),
-            Container(
-              width: 1,
-              height: 280,
-              margin: const EdgeInsets.symmetric(horizontal: 14),
-              color: const Color(0xFFE5E7EB),
-            ),
-            Expanded(
-              child: MerchantFooterPanel(
-                title: 'Notifikasi Merchant',
-                child: const MerchantNotificationList(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Widget gabungan Verifikasi + Pendapatan
-class _CombinedVerificationRevenue extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return _SectionShell(
-      child: SizedBox(
-        height: 300,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: MerchantFooterPanel(
-                title: 'Ringkasan Verifikasi Merchant',
-                child: const MerchantVerificationSummary(),
-              ),
-            ),
-            Container(
-              width: 1,
-              height: 280,
-              margin: const EdgeInsets.symmetric(horizontal: 14),
-              color: const Color(0xFFE5E7EB),
-            ),
-            Expanded(
-              child: MerchantFooterPanel(
-                title: 'Ringkasan Pendapatan Merchant',
-                child: const MerchantRevenueSummary(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Mock data untuk top merchants
-final _mockTopMerchants = [
-  const MerchantTopMerchant(
-    rank: '1',
-    name: 'Kopi Kita',
-    orders: '142 pesanan',
-    revenue: 'Rp 8.2M',
-    color: 0xFF0F8D55,
-  ),
-  const MerchantTopMerchant(
-    rank: '2',
-    name: 'Burger Enak',
-    orders: '118 pesanan',
-    revenue: 'Rp 6.8M',
-    color: 0xFF3B82F6,
-  ),
-  const MerchantTopMerchant(
-    rank: '3',
-    name: 'Ayam Geprek 99',
-    orders: '95 pesanan',
-    revenue: 'Rp 5.5M',
-    color: 0xFFF59E0B,
-  ),
-  const MerchantTopMerchant(
-    rank: '4',
-    name: 'Pizza Mantap',
-    orders: '87 pesanan',
-    revenue: 'Rp 4.9M',
-    color: 0xFF7C3AED,
-  ),
-  const MerchantTopMerchant(
-    rank: '5',
-    name: 'Sushi Premium',
-    orders: '72 pesanan',
-    revenue: 'Rp 4.0M',
-    color: 0xFFEF4444,
-  ),
-];
 
 class _ToolbarRow extends StatelessWidget {
   const _ToolbarRow({
@@ -409,268 +424,100 @@ class _ToolbarRow extends StatelessWidget {
   final String selectedStatus;
   final String selectedCategory;
   final String selectedDate;
-  final ValueChanged<String> onSearchChanged;
-  final ValueChanged<String> onStatusChanged;
-  final ValueChanged<String> onCategoryChanged;
-  final ValueChanged<String> onDateChanged;
+  final Function(String) onSearchChanged;
+  final Function(String) onStatusChanged;
+  final Function(String) onCategoryChanged;
+  final Function(String) onDateChanged;
   final VoidCallback onReset;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 1100;
-        final children = <Widget>[
-          SizedBox(
-            width: compact ? double.infinity : 320,
-            child: _SearchField(
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: TextField(
               controller: searchController,
               onChanged: onSearchChanged,
-            ),
-          ),
-          SizedBox(
-            width: compact ? double.infinity : 160,
-            child: _DropdownField(
-              value: selectedStatus,
-              items: const ['Semua', 'Aktif', 'Pending', 'Suspend', 'Nonaktif'],
-              onChanged: onStatusChanged,
-            ),
-          ),
-          SizedBox(
-            width: compact ? double.infinity : 180,
-            child: _DropdownField(
-              value: selectedCategory,
-              items: const ['Semua Kategori', 'F&B', 'Retail', 'Jasa'],
-              onChanged: onCategoryChanged,
-            ),
-          ),
-          SizedBox(
-            width: compact ? double.infinity : 160,
-            child: _DropdownField(
-              value: selectedDate,
-              items: const ['Tanggal Daftar', 'Terbaru', 'Terlama'],
-              onChanged: onDateChanged,
-            ),
-          ),
-          ElevatedButton.icon(
-            onPressed: onReset,
-            icon: const Icon(Icons.refresh_rounded, size: 18),
-            label: const Text('Reset Filter'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF3F4F6),
-              foregroundColor: const Color(0xFF374151),
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+              decoration: const InputDecoration(
+                hintText: 'Cari nama toko, pemilik, atau email...',
+                prefixIcon: Icon(Icons.search, size: 18),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 10),
               ),
             ),
           ),
-        ];
-
-        if (compact) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (int i = 0; i < children.length; i++) ...[
-                children[i],
-                if (i < children.length - 1) const SizedBox(height: 10),
-              ],
-            ],
-          );
-        }
-
-        return Wrap(
-          spacing: 12,
-          runSpacing: 10,
-          children: children,
-        );
-      },
+        ),
+        const SizedBox(width: 12),
+        _DropdownFilter(
+          value: selectedStatus,
+          items: const ['Semua', 'pending', 'approved', 'rejected'],
+          onChanged: (v) {
+            if (v != null) onStatusChanged(v);
+          },
+        ),
+        const SizedBox(width: 12),
+        Flexible(
+          child: ElevatedButton(
+            onPressed: onReset,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.grey.shade100,
+              foregroundColor: Colors.black87,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            ),
+            child: const Text('Reset', overflow: TextOverflow.ellipsis),
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _SearchField extends StatelessWidget {
-  const _SearchField({
-    required this.controller,
-    required this.onChanged,
-  });
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-  @override
-  Widget build(BuildContext context) => TextField(
-        controller: controller,
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          hintText: 'Cari nama toko, pemilik, email...',
-          hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
-          prefixIcon: const Icon(Icons.search_rounded, size: 20),
-          filled: true,
-          fillColor: const Color(0xFFF9FAFB),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFF0F8D55), width: 2),
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        ),
-      );
-}
-
-class _DropdownField extends StatelessWidget {
-  const _DropdownField({
+class _DropdownFilter extends StatelessWidget {
+  const _DropdownFilter({
     required this.value,
     required this.items,
     required this.onChanged,
   });
+
   final String value;
   final List<String> items;
-  final ValueChanged<String> onChanged;
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            value: value,
-            isExpanded: true,
-            icon: const Icon(Icons.arrow_drop_down_rounded, size: 20),
-            style: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
-            items: items
-                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                .toList(),
-            onChanged: (v) {
-              if (v != null) onChanged(v);
-            },
-          ),
-        ),
-      );
-}
+  final ValueChanged<String?> onChanged;
 
-class _MetricsGrid extends StatelessWidget {
-  const _MetricsGrid({required this.compact});
-  final bool compact;
-  @override
-  Widget build(BuildContext context) => LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final perRow = width >= 1380
-              ? 5
-              : width >= 1100
-                  ? 4
-                  : width >= 820
-                      ? 3
-                      : width >= 540
-                          ? 2
-                          : 1;
-          final cardWidth = perRow == 5
-              ? (width - 56) / 5
-              : perRow == 4
-                  ? (width - 42) / 4
-                  : perRow == 3
-                      ? (width - 28) / 3
-                      : perRow == 2
-                          ? (width - 14) / 2
-                          : width;
-          return Wrap(
-            spacing: 14,
-            runSpacing: 14,
-            children: _metrics
-                .map((m) => SizedBox(width: cardWidth, child: _MetricCard(metric: m)))
-                .toList(),
-          );
-        },
-      );
-}
-
-final _metrics = const [
-  _MetricData('Total Merchant', '128', '+12', Icons.store_rounded),
-  _MetricData('Merchant Aktif', '95', '+8', Icons.check_circle_rounded),
-  _MetricData('Menunggu Verifikasi', '10', '+2', Icons.pending_rounded),
-  _MetricData('Merchant Suspend', '15', '-3', Icons.block_rounded),
-  _MetricData('Merchant Baru (7 Hari)', '12', '+5', Icons.fiber_new_rounded),
-];
-
-class _MetricData {
-  final String label;
-  final String value;
-  final String delta;
-  final IconData icon;
-  const _MetricData(this.label, this.value, this.delta, this.icon);
-}
-
-class _MetricCard extends StatelessWidget {
-  const _MetricCard({required this.metric});
-  final _MetricData metric;
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(metric.icon, size: 20, color: const Color(0xFF0F8D55)),
-              ),
-              Text(
-                metric.delta,
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  color: Color(0xFF16A34A),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            metric.label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Flexible(
-                child: Text(
-                  metric.value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          onChanged: onChanged,
+          items: items.map((item) {
+            String label = item;
+            if (item == 'approved') label = 'Aktif';
+            if (item == 'pending') label = 'Pending';
+            if (item == 'rejected') label = 'Ditolak';
+            if (item == 'Semua') label = 'Semua Status';
+            
+            return DropdownMenuItem(
+              value: item,
+              child: Text(label, style: const TextStyle(fontSize: 13)),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -683,109 +530,136 @@ class _ChartsRow extends StatelessWidget {
     required this.chartController,
     required this.stacked,
   });
+
   final String chartFilter;
   final ValueChanged<String> onChartFilterChanged;
   final AnimationController chartController;
   final bool stacked;
+
   @override
   Widget build(BuildContext context) {
-    final reg = _PanelCard(
-      title: 'Grafik Pendaftaran Merchant',
-      child: Column(
-        children: [
-          Align(
-            alignment: Alignment.centerRight,
-            child: _FilterChip(
-              value: chartFilter,
-              onChanged: onChartFilterChanged,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: MerchantRegistrationChart(progress: chartController.value),
-          ),
-        ],
-      ),
-    );
-    final don = _PanelCard(
-      title: 'Distribusi Status Merchant',
-      child: const MerchantDistributionDonut(progress: 1),
-    );
     if (stacked) {
       return Column(
         children: [
-          SizedBox(height: 330, child: reg),
+          _SectionShell(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Pendaftaran Merchant',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF111827),
+                      ),
+                    ),
+                    _DropdownFilter(
+                      value: chartFilter,
+                      items: const ['7 Hari Terakhir', '30 Hari Terakhir', 'Tahun Ini'],
+                      onChanged: (v) {
+                        if (v != null) onChartFilterChanged(v);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 320,
+                  child: MerchantRegistrationChart(progress: chartController.value),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 14),
-          SizedBox(height: 330, child: don),
+          _SectionShell(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Distribusi Merchant per Kategori',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+                SizedBox(height: 20),
+                SizedBox(
+                  height: 320,
+                  child: MerchantDistributionDonut(progress: chartController.value),
+                ),
+              ],
+            ),
+          ),
         ],
       );
     }
 
     return Row(
       children: [
-        Expanded(flex: 2, child: SizedBox(height: 330, child: reg)),
+        Expanded(
+          flex: 1,
+          child: _SectionShell(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Pendaftaran Merchant',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF111827),
+                      ),
+                    ),
+                    _DropdownFilter(
+                      value: chartFilter,
+                      items: const ['7 Hari Terakhir', '30 Hari Terakhir', 'Tahun Ini'],
+                      onChanged: (v) {
+                        if (v != null) onChartFilterChanged(v);
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 320,
+                  child: MerchantRegistrationChart(progress: chartController.value),
+                ),
+              ],
+            ),
+          ),
+        ),
         const SizedBox(width: 14),
-        Expanded(flex: 1, child: SizedBox(height: 330, child: don)),
+        Expanded(
+          flex: 1,
+          child: _SectionShell(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Distribusi Merchant per Kategori',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+                SizedBox(height: 20),
+                SizedBox(
+                  height: 320,
+                  child: MerchantDistributionDonut(progress: chartController.value),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
-}
-
-class _PanelCard extends StatelessWidget {
-  const _PanelCard({required this.title, required this.child});
-  final String title;
-  final Widget child;
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            Expanded(child: child),
-          ],
-        ),
-      );
-}
-
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({required this.value, required this.onChanged});
-  final String value;
-  final ValueChanged<String> onChanged;
-  @override
-  Widget build(BuildContext context) => DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          items: const [
-            '1 Hari Terakhir',
-            '3 Hari Terakhir',
-            '7 Hari Terakhir',
-          ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-          onChanged: (v) {
-            if (v != null) onChanged(v);
-          },
-        ),
-      );
-}
-
-class _FooterCardShell extends StatelessWidget {
-  const _FooterCardShell({required this.title, required this.child});
-  final String title;
-  final Widget child;
-  @override
-  Widget build(BuildContext context) => _SectionShell(
-        child: SizedBox(
-          height: 300,
-          child: MerchantFooterPanel(title: title, child: child),
-        ),
-      );
 }

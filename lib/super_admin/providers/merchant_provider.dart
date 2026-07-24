@@ -33,6 +33,7 @@ class MerchantProvider extends ChangeNotifier {
       _merchants = await _repository.getAll();
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ MerchantProvider loadMerchants error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -40,110 +41,107 @@ class MerchantProvider extends ChangeNotifier {
   }
 
   Future<void> addMerchant(MerchantRecord merchant) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
     try {
       final newMerchant = await _repository.create(merchant);
       _merchants.insert(0, newMerchant);
+      notifyListeners();
     } catch (e) {
       _error = e.toString();
-    } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }
 
   Future<void> updateMerchant(String id, MerchantRecord merchant) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
     try {
       final updated = await _repository.update(id, merchant);
       final index = _merchants.indexWhere((m) => m.id == id);
       if (index != -1) {
         _merchants[index] = updated;
       }
+      notifyListeners();
     } catch (e) {
       _error = e.toString();
-    } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }
 
   Future<void> deleteMerchant(String id) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
     try {
       await _repository.delete(id);
       _merchants.removeWhere((m) => m.id == id);
+      notifyListeners();
     } catch (e) {
       _error = e.toString();
-    } finally {
-      _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> approveMerchant(String id) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
+  /// Approve merchant - ubah approval_status ke approved
+  Future<bool> approveMerchant(String id) async {
     try {
       final updated = await _repository.approve(id);
       final index = _merchants.indexWhere((m) => m.id == id);
       if (index != -1) {
         _merchants[index] = updated;
       }
+      notifyListeners();
+      return true;
     } catch (e) {
       _error = e.toString();
-    } finally {
-      _isLoading = false;
+      debugPrint('❌ approveMerchant error: $e');
       notifyListeners();
+      return false;
     }
   }
 
-  Future<void> suspendMerchant(String id) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+  /// Reject merchant - ubah approval_status ke rejected
+  Future<bool> rejectMerchant(String id, String reason) async {
+    try {
+      final updated = await _repository.reject(id, reason);
+      final index = _merchants.indexWhere((m) => m.id == id);
+      if (index != -1) {
+        _merchants[index] = updated;
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      debugPrint('❌ rejectMerchant error: $e');
+      notifyListeners();
+      return false;
+    }
+  }
 
+  /// Suspend merchant
+  Future<bool> suspendMerchant(String id) async {
     try {
       final updated = await _repository.suspend(id);
       final index = _merchants.indexWhere((m) => m.id == id);
       if (index != -1) {
         _merchants[index] = updated;
       }
+      notifyListeners();
+      return true;
     } catch (e) {
       _error = e.toString();
-    } finally {
-      _isLoading = false;
       notifyListeners();
+      return false;
     }
   }
 
-  Future<void> deactivateMerchant(String id) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
+  Future<bool> deactivateMerchant(String id) async {
     try {
       final updated = await _repository.deactivate(id);
       final index = _merchants.indexWhere((m) => m.id == id);
       if (index != -1) {
         _merchants[index] = updated;
       }
+      notifyListeners();
+      return true;
     } catch (e) {
       _error = e.toString();
-    } finally {
-      _isLoading = false;
       notifyListeners();
+      return false;
     }
   }
 
@@ -175,4 +173,10 @@ class MerchantProvider extends ChangeNotifier {
 
     return filtered;
   }
+
+  // Counters for metrics
+  int get totalMerchants => _merchants.length;
+  int get pendingMerchants => _merchants.where((m) => m.status == 'pending').length;
+  int get approvedMerchants => _merchants.where((m) => m.status == 'approved').length;
+  int get rejectedMerchants => _merchants.where((m) => m.status == 'rejected').length;
 }

@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:menusisa_dev/super_admin/shared/widgets/admin_toast.dart';
+import 'package:flutter/material.dart';
 
 class MerchantActionButton extends StatelessWidget {
   const MerchantActionButton({
@@ -126,43 +127,5 @@ void showMerchantNotification(
   IconData? icon,
 }) {
   ScaffoldMessenger.of(context).clearSnackBars();
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Row(
-        children: [
-          if (icon != null) ...[
-            Icon(icon, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
-          ],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  message,
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      backgroundColor: backgroundColor ?? const Color(0xFF0F8D55),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      duration: const Duration(seconds: 3),
-      margin: const EdgeInsets.all(16),
-    ),
-  );
+  AdminToast.show(context, 'Tindakan berhasil', type: AdminToastType.success);
 }

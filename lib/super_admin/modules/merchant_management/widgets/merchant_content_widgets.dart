@@ -8,21 +8,21 @@ class MerchantRegistrationChart extends StatelessWidget {
   final double progress;
 
   static const _spots = <FlSpot>[
-    FlSpot(1, 8),
-    FlSpot(2, 18),
-    FlSpot(3, 14),
-    FlSpot(4, 24),
-    FlSpot(5, 20),
-    FlSpot(6, 31),
-    FlSpot(7, 39),
+    FlSpot(1, 0),
+    FlSpot(2, 0),
+    FlSpot(3, 0),
+    FlSpot(4, 0),
+    FlSpot(5, 0),
+    FlSpot(6, 0),
+    FlSpot(7, 0),
   ];
 
   @override
   Widget build(BuildContext context) {
     return LineChart(
       LineChartData(
-        minX: 1,
-        maxX: 7,
+        minX: 0,
+        maxX: 6,
         minY: 0,
         maxY: 45,
         gridData: FlGridData(
@@ -125,26 +125,26 @@ class MerchantDistributionDonut extends StatelessWidget {
     final sections = [
       PieChartSectionData(
         color: const Color(0xFF0F8D55),
-        value: 112 * progress,
-        radius: 34,
+        value: 0 * progress,
+        radius: 28,
         showTitle: false,
       ),
       PieChartSectionData(
         color: const Color(0xFFF59E0B),
-        value: 10 * progress,
-        radius: 34,
+        value: 0 * progress,
+        radius: 28,
         showTitle: false,
       ),
       PieChartSectionData(
         color: const Color(0xFF7C3AED),
-        value: 4 * progress,
-        radius: 34,
+        value: 0 * progress,
+        radius: 28,
         showTitle: false,
       ),
       PieChartSectionData(
         color: const Color(0xFFEF4444),
-        value: 2 * progress,
-        radius: 34,
+        value: 0 * progress,
+        radius: 28,
         showTitle: false,
       ),
     ];
@@ -158,7 +158,7 @@ class MerchantDistributionDonut extends StatelessWidget {
               PieChart(
                 PieChartData(
                   sectionsSpace: 0,
-                  centerSpaceRadius: 58,
+                  centerSpaceRadius: 50,
                   startDegreeOffset: -90,
                   sections: sections,
                   borderData: FlBorderData(show: false),
@@ -169,8 +169,8 @@ class MerchantDistributionDonut extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '128',
-                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700),
+                    '0',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   SizedBox(height: 2),
                   Text(
