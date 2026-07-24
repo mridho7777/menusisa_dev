@@ -1,11 +1,10 @@
 ﻿import 'package:flutter/material.dart';
-import '../core/services/data_sync_service.dart';
-import '../core/services/local_storage_service.dart';
+import '../repositories/activity_log_repository.dart';
 
 /// Provider untuk Activity Logs
 class ActivityLogProvider extends ChangeNotifier {
-  final _syncService = DataSyncService.instance;
-  
+  final ActivityLogRepository _repository = ActivityLogRepository();
+
   List<Map<String, dynamic>> _logs = [];
   List<Map<String, dynamic>> get logs => _logs;
 
@@ -34,12 +33,13 @@ class ActivityLogProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _logs = await _syncService.fetchData(
-        StorageKeys.activityLogs,
-        'activity_logs',
+      _logs = await _repository.query(
+        orderBy: 'created_at',
+        ascending: false,
       );
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ ActivityLogProvider loadLogs error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -50,33 +50,30 @@ class ActivityLogProvider extends ChangeNotifier {
     try {
       final logWithTimestamp = {
         ...log,
-        'timestamp': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toIso8601String(),
       };
       
-      final result = await _syncService.addItem(
-        StorageKeys.activityLogs,
-        'activity_logs',
-        logWithTimestamp,
-      );
-      if (result != null) {
-        _logs.insert(0, result);
-        notifyListeners();
-      }
+      final result = await _repository.create(logWithTimestamp);
+      _logs.insert(0, result);
+      notifyListeners();
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ ActivityLogProvider addLog error: $e');
       notifyListeners();
     }
   }
 
   // Method untuk log aktivitas tertentu
-  Future<void> logAction(String userId, String userName, String action, String description) async {
+  Future<void> logAction(String userId, String userName, String module, String activityType, String description) async {
     await addLog({
-      'id': 'log_',
       'user_id': userId,
       'user_name': userName,
-      'action': action,
+      'module': module,
+      'activity_type': activityType,
       'description': description,
-      'timestamp': DateTime.now().toIso8601String(),
+      'ip_address': '0.0.0.0', // TODO: Get real IP
+      'device': 'Web Browser',
+      'location': 'Unknown',
     });
   }
 
@@ -102,13 +99,15 @@ class ActivityLogProvider extends ChangeNotifier {
       final query = _searchQuery.toLowerCase();
       filtered = filtered.where((log) {
         return (log['user_name']?.toString().toLowerCase().contains(query) ?? false) ||
-            (log['action']?.toString().toLowerCase().contains(query) ?? false) ||
-            (log['description']?.toString().toLowerCase().contains(query) ?? false);
+            (log['activity_type']?.toString().toLowerCase().contains(query) ?? false) ||
+            (log['description']?.toString().toLowerCase().contains(query) ?? false) ||
+            (log['module']?.toString().toLowerCase().contains(query) ?? false) ||
+            (log['ip_address']?.toString().toLowerCase().contains(query) ?? false);
       }).toList();
     }
 
     if (_actionFilter != 'Semua') {
-      filtered = filtered.where((log) => log['action'] == _actionFilter).toList();
+      filtered = filtered.where((log) => log['activity_type'] == _actionFilter).toList();
     }
 
     if (_userFilter != 'Semua') {
@@ -127,8 +126,39 @@ class ActivityLogProvider extends ChangeNotifier {
 
   // Get unique actions for filter
   List<String> get uniqueActions {
-    final actions = _logs.map((log) => log['action']?.toString() ?? 'Unknown').toSet().toList();
+    final actions = _logs.map((log) => log['activity_type']?.toString() ?? 'Unknown').toSet().toList();
     actions.sort();
     return ['Semua', ...actions];
   }
+
+  // Metrics
+  int get totalActivities => _logs.length;
+  
+  int get todayActivities {
+    final today = DateTime.now();
+    return _logs.where((log) {
+      final createdAt = DateTime.tryParse(log['created_at']?.toString() ?? '');
+      if (createdAt == null) return false;
+      return createdAt.year == today.year && 
+             createdAt.month == today.month && 
+             createdAt.day == today.day;
+    }).length;
+  }
+
+  int get uniqueUsersToday {
+    final today = DateTime.now();
+    final todayLogs = _logs.where((log) {
+      final createdAt = DateTime.tryParse(log['created_at']?.toString() ?? '');
+      if (createdAt == null) return false;
+      return createdAt.year == today.year && 
+             createdAt.month == today.month && 
+             createdAt.day == today.day;
+    });
+    return todayLogs.map((log) => log['user_id']).toSet().length;
+  }
+
+  int countByActivityType(String type) {
+    return _logs.where((log) => log['activity_type'] == type).length;
+  }
 }
+

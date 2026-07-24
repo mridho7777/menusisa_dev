@@ -1,13 +1,13 @@
 ﻿import 'package:flutter/material.dart';
-import '../core/services/data_sync_service.dart';
-import '../core/services/local_storage_service.dart';
+import '../modules/transaction_management/models/transaction_models.dart';
+import '../repositories/transaction_repository.dart';
 
 /// Provider untuk Transaction Management
 class TransactionProvider extends ChangeNotifier {
-  final _syncService = DataSyncService.instance;
+  final TransactionRepository _repository = TransactionRepository();
   
-  List<Map<String, dynamic>> _transactions = [];
-  List<Map<String, dynamic>> get transactions => _transactions;
+  List<TransactionRecord> _transactions = [];
+  List<TransactionRecord> get transactions => _transactions;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -31,85 +31,30 @@ class TransactionProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _transactions = await _syncService.fetchData(
-        StorageKeys.transactions,
-        'transactions',
-      );
+      _transactions = await _repository.getAll();
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ TransactionProvider loadTransactions error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> addTransaction(Map<String, dynamic> transaction) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
+  Future<bool> updateTransactionStatus(String id, String newStatus) async {
     try {
-      final result = await _syncService.addItem(
-        StorageKeys.transactions,
-        'transactions',
-        transaction,
-      );
-      if (result != null) {
-        _transactions.insert(0, result);
+      final updated = await _repository.updateStatus(id, newStatus);
+      final index = _transactions.indexWhere((t) => t.id == id);
+      if (index != -1) {
+        _transactions[index] = updated;
       }
+      notifyListeners();
+      return true;
     } catch (e) {
       _error = e.toString();
-    } finally {
-      _isLoading = false;
+      debugPrint('❌ TransactionProvider updateStatus error: $e');
       notifyListeners();
-    }
-  }
-
-  Future<void> updateTransaction(String id, Map<String, dynamic> transaction) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final result = await _syncService.updateItem(
-        StorageKeys.transactions,
-        'transactions',
-        id,
-        transaction,
-      );
-      if (result != null) {
-        final index = _transactions.indexWhere((t) => t['id'] == id);
-        if (index != -1) {
-          _transactions[index] = result;
-        }
-      }
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> deleteTransaction(String id) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final success = await _syncService.deleteItem(
-        StorageKeys.transactions,
-        'transactions',
-        id,
-      );
-      if (success) {
-        _transactions.removeWhere((t) => t['id'] == id);
-      }
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      return false;
     }
   }
 
@@ -123,32 +68,29 @@ class TransactionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<Map<String, dynamic>> get filteredTransactions {
-    var filtered = List<Map<String, dynamic>>.from(_transactions);
+  List<TransactionRecord> get filteredTransactions {
+    var filtered = List<TransactionRecord>.from(_transactions);
 
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
       filtered = filtered.where((t) {
-        return (t['id']?.toString().toLowerCase().contains(query) ?? false) ||
-            (t['customer_name']?.toString().toLowerCase().contains(query) ?? false) ||
-            (t['merchant_name']?.toString().toLowerCase().contains(query) ?? false);
+        return t.orderCode.toLowerCase().contains(query) ||
+            t.customerName.toLowerCase().contains(query) ||
+            t.merchantName.toLowerCase().contains(query);
       }).toList();
     }
 
     if (_statusFilter != 'Semua') {
-      filtered = filtered.where((t) => t['status'] == _statusFilter).toList();
+      filtered = filtered.where((t) => t.status == _statusFilter).toList();
     }
 
     return filtered;
   }
 
-  // Method untuk update status transaksi
-  Future<void> updateTransactionStatus(String id, String newStatus) async {
-    final index = _transactions.indexWhere((t) => t['id'] == id);
-    if (index != -1) {
-      final updated = Map<String, dynamic>.from(_transactions[index]);
-      updated['status'] = newStatus;
-      await updateTransaction(id, updated);
-    }
-  }
+  // Metrics
+  int get totalTransactions => _transactions.length;
+  int get processingTransactions => _transactions.where((t) => t.status == 'processing').length;
+  int get completedTransactions => _transactions.where((t) => t.status == 'done').length;
+  int get cancelledTransactions => _transactions.where((t) => t.status == 'cancelled').length;
 }
+

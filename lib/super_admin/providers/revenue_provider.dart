@@ -1,10 +1,9 @@
 ﻿import 'package:flutter/material.dart';
-import '../core/services/data_sync_service.dart';
-import '../core/services/local_storage_service.dart';
+import '../repositories/platform_revenue_repository.dart';
 
 /// Provider untuk Revenue Management
 class RevenueProvider extends ChangeNotifier {
-  final _syncService = DataSyncService.instance;
+  final PlatformRevenueRepository _repository = PlatformRevenueRepository();
   
   List<Map<String, dynamic>> _revenues = [];
   List<Map<String, dynamic>> get revenues => _revenues;
@@ -31,12 +30,10 @@ class RevenueProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _revenues = await _syncService.fetchData(
-        StorageKeys.revenues,
-        'revenues',
-      );
+      _revenues = await _repository.getAll();
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ RevenueProvider loadRevenues error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -49,16 +46,11 @@ class RevenueProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _syncService.addItem(
-        StorageKeys.revenues,
-        'revenues',
-        revenue,
-      );
-      if (result != null) {
-        _revenues.insert(0, result);
-      }
+      final result = await _repository.create(revenue);
+      _revenues.insert(0, result);
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ RevenueProvider addRevenue error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -71,20 +63,14 @@ class RevenueProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _syncService.updateItem(
-        StorageKeys.revenues,
-        'revenues',
-        id,
-        revenue,
-      );
-      if (result != null) {
-        final index = _revenues.indexWhere((r) => r['id'] == id);
-        if (index != -1) {
-          _revenues[index] = result;
-        }
+      final result = await _repository.update(id, revenue);
+      final index = _revenues.indexWhere((r) => r['id'] == id);
+      if (index != -1) {
+        _revenues[index] = result;
       }
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ RevenueProvider updateRevenue error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -113,20 +99,15 @@ class RevenueProvider extends ChangeNotifier {
     }
 
     if (_periodFilter != 'Semua') {
-      // Filter berdasarkan periode
       final now = DateTime.now();
       filtered = filtered.where((r) {
-        final date = DateTime.tryParse(r['date']?.toString() ?? '');
+        final date = DateTime.tryParse(r['date']?.toString() ?? r['created_at']?.toString() ?? '');
         if (date == null) return false;
-        
         switch (_periodFilter) {
           case 'Hari Ini':
-            return date.year == now.year && 
-                   date.month == now.month && 
-                   date.day == now.day;
+            return date.year == now.year && date.month == now.month && date.day == now.day;
           case 'Minggu Ini':
-            final weekAgo = now.subtract(const Duration(days: 7));
-            return date.isAfter(weekAgo);
+            return date.isAfter(now.subtract(const Duration(days: 7)));
           case 'Bulan Ini':
             return date.year == now.year && date.month == now.month;
           default:
@@ -138,22 +119,21 @@ class RevenueProvider extends ChangeNotifier {
     return filtered;
   }
 
-  // Calculate total revenue
   double get totalRevenue {
     return filteredRevenues.fold(0.0, (sum, r) {
-      final amount = double.tryParse(r['amount']?.toString() ?? '0') ?? 0.0;
+      final amount = double.tryParse(r['total_revenue']?.toString() ?? r['amount']?.toString() ?? '0') ?? 0.0;
       return sum + amount;
     });
   }
 
-  // Get revenue by merchant
   Map<String, double> get revenueByMerchant {
     final Map<String, double> result = {};
     for (final r in filteredRevenues) {
       final merchant = r['merchant_name']?.toString() ?? 'Unknown';
-      final amount = double.tryParse(r['amount']?.toString() ?? '0') ?? 0.0;
+      final amount = double.tryParse(r['total_revenue']?.toString() ?? r['amount']?.toString() ?? '0') ?? 0.0;
       result[merchant] = (result[merchant] ?? 0.0) + amount;
     }
     return result;
   }
 }
+

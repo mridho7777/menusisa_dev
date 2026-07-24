@@ -1,11 +1,10 @@
 ﻿import 'package:flutter/material.dart';
-import '../core/services/data_sync_service.dart';
-import '../core/services/local_storage_service.dart';
+import '../repositories/payment_monitoring_repository.dart';
 
 /// Provider untuk Payment Monitoring
 class PaymentProvider extends ChangeNotifier {
-  final _syncService = DataSyncService.instance;
-  
+  final PaymentMonitoringRepository _repository = PaymentMonitoringRepository();
+
   List<Map<String, dynamic>> _payments = [];
   List<Map<String, dynamic>> get payments => _payments;
 
@@ -34,12 +33,10 @@ class PaymentProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _payments = await _syncService.fetchData(
-        StorageKeys.payments,
-        'payments',
-      );
+      _payments = await _repository.getAll();
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ PaymentProvider loadPayments error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -52,16 +49,11 @@ class PaymentProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _syncService.addItem(
-        StorageKeys.payments,
-        'payments',
-        payment,
-      );
-      if (result != null) {
-        _payments.insert(0, result);
-      }
+      final result = await _repository.create(payment);
+      _payments.insert(0, result);
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ PaymentProvider addPayment error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -74,20 +66,14 @@ class PaymentProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _syncService.updateItem(
-        StorageKeys.payments,
-        'payments',
-        id,
-        payment,
-      );
-      if (result != null) {
-        final index = _payments.indexWhere((p) => p['id'] == id);
-        if (index != -1) {
-          _payments[index] = result;
-        }
+      final result = await _repository.update(id, payment);
+      final index = _payments.indexWhere((p) => p['id'] == id);
+      if (index != -1) {
+        _payments[index] = result;
       }
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ PaymentProvider updatePayment error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -100,16 +86,11 @@ class PaymentProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final success = await _syncService.deleteItem(
-        StorageKeys.payments,
-        'payments',
-        id,
-      );
-      if (success) {
-        _payments.removeWhere((p) => p['id'] == id);
-      }
+      await _repository.delete(id);
+      _payments.removeWhere((p) => p['id'] == id);
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ PaymentProvider deletePayment error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -138,8 +119,7 @@ class PaymentProvider extends ChangeNotifier {
       final query = _searchQuery.toLowerCase();
       filtered = filtered.where((p) {
         return (p['id']?.toString().toLowerCase().contains(query) ?? false) ||
-            (p['transaction_id']?.toString().toLowerCase().contains(query) ?? false) ||
-            (p['merchant_name']?.toString().toLowerCase().contains(query) ?? false);
+            (p['order_id']?.toString().toLowerCase().contains(query) ?? false);
       }).toList();
     }
 
@@ -154,26 +134,46 @@ class PaymentProvider extends ChangeNotifier {
     return filtered;
   }
 
-  // Method untuk verifikasi pembayaran
-  Future<void> verifyPayment(String id) async {
-    final index = _payments.indexWhere((p) => p['id'] == id);
-    if (index != -1) {
-      final updated = Map<String, dynamic>.from(_payments[index]);
-      updated['status'] = 'Verified';
-      updated['verified_at'] = DateTime.now().toIso8601String();
-      await updatePayment(id, updated);
+  /// Method untuk verifikasi pembayaran
+  Future<bool> verifyPayment(String id, String verifiedBy) async {
+    try {
+      final updated = await _repository.verifyPayment(id, verifiedBy);
+      final index = _payments.indexWhere((p) => p['id'] == id);
+      if (index != -1) {
+        _payments[index] = updated;
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      debugPrint('❌ PaymentProvider verifyPayment error: $e');
+      notifyListeners();
+      return false;
     }
   }
 
-  // Method untuk refund pembayaran
-  Future<void> refundPayment(String id, String reason) async {
-    final index = _payments.indexWhere((p) => p['id'] == id);
-    if (index != -1) {
-      final updated = Map<String, dynamic>.from(_payments[index]);
-      updated['status'] = 'Refunded';
-      updated['refund_reason'] = reason;
-      updated['refunded_at'] = DateTime.now().toIso8601String();
-      await updatePayment(id, updated);
+  /// Method untuk reject pembayaran
+  Future<bool> rejectPayment(String id, String reason) async {
+    try {
+      final updated = await _repository.rejectPayment(id, reason);
+      final index = _payments.indexWhere((p) => p['id'] == id);
+      if (index != -1) {
+        _payments[index] = updated;
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      debugPrint('❌ PaymentProvider rejectPayment error: $e');
+      notifyListeners();
+      return false;
     }
   }
+
+  // Metrics
+  int get totalPayments => _payments.length;
+  int get pendingPayments => _payments.where((p) => p['status'] == 'pending').length;
+  int get verifiedPayments => _payments.where((p) => p['status'] == 'verified').length;
+  int get failedPayments => _payments.where((p) => p['status'] == 'failed').length;
 }
+

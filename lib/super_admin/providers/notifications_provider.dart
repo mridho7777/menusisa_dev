@@ -1,10 +1,11 @@
 ﻿import 'package:flutter/material.dart';
-import '../core/services/data_sync_service.dart';
-import '../core/services/local_storage_service.dart';
+import 'package:uuid/uuid.dart';
+import '../repositories/notification_repository.dart';
 
 /// Provider untuk Notifications
 class NotificationsProvider extends ChangeNotifier {
-  final _syncService = DataSyncService.instance;
+  final NotificationRepository _repository = NotificationRepository();
+  final _uuid = const Uuid();
   
   List<Map<String, dynamic>> _notifications = [];
   List<Map<String, dynamic>> get notifications => _notifications;
@@ -31,12 +32,13 @@ class NotificationsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _notifications = await _syncService.fetchData(
-        StorageKeys.notifications,
-        'notifications',
+      _notifications = await _repository.query(
+        orderBy: 'created_at',
+        ascending: false,
       );
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ NotificationsProvider loadNotifications error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -45,23 +47,25 @@ class NotificationsProvider extends ChangeNotifier {
 
   Future<void> addNotification(Map<String, dynamic> notification) async {
     try {
-      final notificationWithTimestamp = {
-        ...notification,
-        'created_at': DateTime.now().toIso8601String(),
+      final id = notification['id'] ?? _uuid.v4();
+      
+      final notificationWithDefaults = {
+        'id': id,
+        'title': notification['title'] ?? 'Notifikasi',
+        'body': notification['message'] ?? notification['body'] ?? '',
+        'type': notification['type'] ?? 'system',
+        'reference_id': notification['entity_id'] ?? notification['reference_id'],
+        'user_id': notification['user_id'],
         'is_read': false,
+        'created_at': DateTime.now().toIso8601String(),
       };
       
-      final result = await _syncService.addItem(
-        StorageKeys.notifications,
-        'notifications',
-        notificationWithTimestamp,
-      );
-      if (result != null) {
-        _notifications.insert(0, result);
-        notifyListeners();
-      }
+      final result = await _repository.create(notificationWithDefaults);
+      _notifications.insert(0, result);
+      notifyListeners();
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ NotificationsProvider addNotification error: $e');
       notifyListeners();
     }
   }
@@ -69,19 +73,17 @@ class NotificationsProvider extends ChangeNotifier {
   Future<void> markAsRead(String id) async {
     final index = _notifications.indexWhere((n) => n['id'] == id);
     if (index != -1) {
-      final updated = Map<String, dynamic>.from(_notifications[index]);
-      updated['is_read'] = true;
-      updated['read_at'] = DateTime.now().toIso8601String();
-      
-      final result = await _syncService.updateItem(
-        StorageKeys.notifications,
-        'notifications',
-        id,
-        updated,
-      );
-      
-      if (result != null) {
+      try {
+        final updated = Map<String, dynamic>.from(_notifications[index]);
+        updated['is_read'] = true;
+        updated['read_at'] = DateTime.now().toIso8601String();
+        
+        final result = await _repository.update(id, updated);
         _notifications[index] = result;
+        notifyListeners();
+      } catch (e) {
+        _error = e.toString();
+        debugPrint('❌ NotificationsProvider markAsRead error: $e');
         notifyListeners();
       }
     }
@@ -96,15 +98,20 @@ class NotificationsProvider extends ChangeNotifier {
   }
 
   Future<void> deleteNotification(String id) async {
-    final success = await _syncService.deleteItem(
-      StorageKeys.notifications,
-      'notifications',
-      id,
-    );
-    
-    if (success) {
+    try {
+      await _repository.delete(id);
       _notifications.removeWhere((n) => n['id'] == id);
       notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      debugPrint('❌ NotificationsProvider deleteNotification error: $e');
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteMultiple(List<String> ids) async {
+    for (final id in ids) {
+      await deleteNotification(id);
     }
   }
 
@@ -141,4 +148,19 @@ class NotificationsProvider extends ChangeNotifier {
     types.sort();
     return ['Semua', ...types];
   }
+
+  Future<void> clearAll() async {
+    try {
+      for (var notif in _notifications) {
+        await _repository.delete(notif['id']);
+      }
+      _notifications.clear();
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      debugPrint('❌ NotificationsProvider clearAll error: $e');
+      notifyListeners();
+    }
+  }
 }
+

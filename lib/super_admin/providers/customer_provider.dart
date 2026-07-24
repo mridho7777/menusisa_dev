@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../modules/customer_management/models/customer_models.dart';
 import '../repositories/customer_repository.dart';
 
@@ -31,88 +31,59 @@ class CustomerProvider extends ChangeNotifier {
 
     try {
       _customers = await _repository.getAll();
-      _applyFilters();
     } catch (e) {
       _error = e.toString();
+      debugPrint('❌ CustomerProvider loadCustomers error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> addCustomer(CustomerRecord customer) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
+  Future<bool> updateCustomer(String id, String fullName, String phone) async {
     try {
-      final newCustomer = await _repository.create(customer);
-      _customers.insert(0, newCustomer);
-      _applyFilters();
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> updateCustomer(String id, CustomerRecord customer) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    try {
-      final updated = await _repository.update(id, customer);
+      final updated = await _repository.updateCustomer(id, fullName, phone);
       final index = _customers.indexWhere((c) => c.id == id);
       if (index != -1) {
         _customers[index] = updated;
-        _applyFilters();
       }
+      notifyListeners();
+      return true;
     } catch (e) {
       _error = e.toString();
-    } finally {
-      _isLoading = false;
+      debugPrint('❌ updateCustomer error: $e');
       notifyListeners();
+      return false;
     }
   }
 
-  Future<void> deleteCustomer(String id) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
+  Future<bool> deleteCustomer(String id) async {
     try {
       await _repository.delete(id);
       _customers.removeWhere((c) => c.id == id);
-      _applyFilters();
+      notifyListeners();
+      return true;
     } catch (e) {
       _error = e.toString();
-    } finally {
-      _isLoading = false;
+      debugPrint('❌ deleteCustomer error: $e');
       notifyListeners();
+      return false;
     }
   }
 
   void setSearchQuery(String query) {
     _searchQuery = query;
-    _applyFilters();
+    notifyListeners();
   }
 
   void setStatusFilter(String status) {
     _statusFilter = status;
-    _applyFilters();
-  }
-
-  void _applyFilters() {
-    // This will be used to filter the displayed list
     notifyListeners();
   }
 
   List<CustomerRecord> get filteredCustomers {
     var filtered = List<CustomerRecord>.from(_customers);
 
-    // Apply search filter
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
       filtered = filtered.where((c) {
@@ -122,11 +93,17 @@ class CustomerProvider extends ChangeNotifier {
       }).toList();
     }
 
-    // Apply status filter
     if (_statusFilter != 'Semua') {
-      filtered = filtered.where((c) => c.accountStatus == _statusFilter).toList();
+      filtered = filtered
+          .where((c) => c.accountStatus == _statusFilter)
+          .toList();
     }
 
     return filtered;
   }
+
+  // Counters for metrics
+  int get totalCustomers => _customers.length;
+  int get activeCustomers =>
+      _customers.where((c) => c.accountStatus == 'Aktif').length;
 }

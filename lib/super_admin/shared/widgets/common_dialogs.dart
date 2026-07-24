@@ -72,7 +72,7 @@ class CommonDialogs {
       
       case FormFieldType.dropdown:
         return DropdownButtonFormField<String>(
-          value: values[config.key]?.toString() ?? config.initialValue,
+          initialValue: values[config.key]?.toString() ?? config.initialValue,
           decoration: InputDecoration(
             labelText: config.label,
             border: const OutlineInputBorder(),
