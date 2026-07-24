@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../models/payment_monitoring_models.dart';
 
@@ -21,130 +21,159 @@ class PaymentTableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: items.map((item) {
-        final statusColor = switch (item.status) {
-          'Berhasil' => const Color(0xFF16A34A),
-          'Pending' => const Color(0xFFF59E0B),
-          'Gagal' => const Color(0xFFEF4444),
-          'Expired' => const Color(0xFF7C3AED),
-          _ => const Color(0xFF6B7280),
-        };
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 28,
-                child: Text(item.id, style: const TextStyle(fontSize: 12)),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Daftar Pembayaran',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF111827),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  item.orderId,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  item.transactionId,
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  item.customer,
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  item.merchant,
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ),
-              Expanded(
-                child: Text(item.method, style: const TextStyle(fontSize: 12)),
-              ),
-              SizedBox(
-                width: 90,
-                child: Text(item.amount, style: const TextStyle(fontSize: 12)),
-              ),
-              SizedBox(
-                width: 86,
-                child: _StatusChip(label: item.status, color: statusColor),
-              ),
-              SizedBox(
-                width: 108,
-                child: Text(item.time, style: const TextStyle(fontSize: 12)),
-              ),
-              SizedBox(
-                width: 180,
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => onView(item),
-                      icon: const Icon(Icons.remove_red_eye_outlined, size: 18),
-                    ),
-                    IconButton(
-                      onPressed: () => onUpdate(item),
-                      icon: const Icon(Icons.edit_outlined, size: 18),
-                    ),
-                    IconButton(
-                      onPressed: () => onCancel(item),
-                      icon: const Icon(
-                        Icons.close_rounded,
-                        size: 18,
-                        color: Color(0xFFEF4444),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => onRefund(item),
-                      icon: const Icon(
-                        Icons.undo_rounded,
-                        size: 18,
-                        color: Color(0xFFF59E0B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            ),
+            Text(
+              'Menampilkan 1 - ${items.length} dari ${items.length} data',
+              style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            headingRowColor: WidgetStateProperty.all(const Color(0xFFF9FAFB)),
+            headingTextStyle: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF374151),
+            ),
+            dataTextStyle: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF111827),
+            ),
+            columnSpacing: 24,
+            horizontalMargin: 16,
+            dataRowMinHeight: 56,
+            dataRowMaxHeight: 56,
+            columns: const [
+              DataColumn(label: Text('No.')),
+              DataColumn(label: Text('Order ID')),
+              DataColumn(label: Text('Transaction ID')),
+              DataColumn(label: Text('Customer')),
+              DataColumn(label: Text('Merchant')),
+              DataColumn(label: Text('Metode')),
+              DataColumn(label: Text('Jumlah')),
+              DataColumn(label: Text('Status')),
+              DataColumn(label: Text('Waktu')),
+              DataColumn(label: Text('Aksi')),
             ],
+            rows: items.map((item) {
+              final statusColor = switch (item.status) {
+                'Berhasil' => const Color(0xFF16A34A),
+                'Pending' => const Color(0xFFF59E0B),
+                'Gagal' => const Color(0xFFEF4444),
+                'Expired' => const Color(0xFF7C3AED),
+                _ => const Color(0xFF6B7280),
+              };
+
+              return DataRow(
+                cells: [
+                  DataCell(Text(item.id)),
+                  DataCell(Text(item.orderId, style: const TextStyle(fontWeight: FontWeight.w600))),
+                  DataCell(Text(item.transactionId)),
+                  DataCell(Text(item.customer)),
+                  DataCell(Text(item.merchant)),
+                  DataCell(Text(item.method)),
+                  DataCell(Text(item.amount, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF0F8D55)))),
+                  DataCell(_StatusChip(label: item.status, color: statusColor)),
+                  DataCell(Text(item.time)),
+                  DataCell(_ActionMenu(item: item, onView: onView, onUpdate: onUpdate, onCancel: onCancel, onRefund: onRefund)),
+                ],
+              );
+            }).toList(),
           ),
-        );
-      }).toList(),
+        ),
+        const SizedBox(height: 16),
+        const _PaginationControls(),
+      ],
     );
   }
 }
 
 class _StatusChip extends StatelessWidget {
   const _StatusChip({required this.label, required this.color});
-
   final String label;
   final Color color;
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+    child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+  );
+}
 
+class _ActionMenu extends StatelessWidget {
+  const _ActionMenu({required this.item, required this.onView, required this.onUpdate, required this.onCancel, required this.onRefund});
+  final PaymentItem item;
+  final ValueChanged<PaymentItem> onView;
+  final ValueChanged<PaymentItem> onUpdate;
+  final ValueChanged<PaymentItem> onCancel;
+  final ValueChanged<PaymentItem> onRefund;
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        label,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 11,
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert_rounded, size: 20),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      offset: const Offset(0, 40),
+      onSelected: (action) {
+        switch (action) {
+          case 'view': onView(item); break;
+          case 'update': onUpdate(item); break;
+          case 'cancel': onCancel(item); break;
+          case 'refund': onRefund(item); break;
+        }
+      },
+      itemBuilder: (context) => [
+        _buildMenuItem(Icons.visibility_rounded, 'Detail Pembayaran', 'view'),
+        _buildMenuItem(Icons.edit_rounded, 'Update Status', 'update'),
+        _buildMenuItem(Icons.close_rounded, 'Batalkan', 'cancel'),
+        _buildMenuItem(Icons.undo_rounded, 'Refund', 'refund'),
+      ],
     );
   }
+
+  PopupMenuItem<String> _buildMenuItem(IconData icon, String label, String value) => PopupMenuItem(value: value, child: Row(children: [Icon(icon, size: 18, color: const Color(0xFF6B7280)), const SizedBox(width: 10), Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF111827)))]));
+}
+
+class _PaginationControls extends StatelessWidget {
+  const _PaginationControls();
+  @override
+  Widget build(BuildContext context) => Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Row(children: [const Text('10 / halaman', style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))), const SizedBox(width: 8), Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(border: Border.all(color: const Color(0xFFE5E7EB)), borderRadius: BorderRadius.circular(6)), child: const Icon(Icons.arrow_drop_down, size: 18))]), Row(children: [_PageButton(icon: Icons.chevron_left_rounded, onPressed: () {}), ...[1, 2, 3].map((page) => _PageButton(label: '$page', isActive: page == 1, onPressed: () {})), _PageButton(icon: Icons.chevron_right_rounded, onPressed: () {})])]);
+}
+
+class _PageButton extends StatelessWidget {
+  const _PageButton({this.label, this.icon, this.isActive = false, required this.onPressed});
+  final String? label; final IconData? icon; final bool isActive; final VoidCallback onPressed;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 2),
+    child: Material(
+      color: isActive ? const Color(0xFF0F8D55) : Colors.transparent,
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          width: 32, height: 32, alignment: Alignment.center,
+          decoration: BoxDecoration(border: isActive ? null : Border.all(color: const Color(0xFFE5E7EB)), borderRadius: BorderRadius.circular(6)),
+          child: icon != null ? Icon(icon, size: 18, color: isActive ? Colors.white : const Color(0xFF6B7280)) : Text(label!, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isActive ? Colors.white : const Color(0xFF374151))),
+        ),
+      ),
+    ),
+  );
 }
 
 class PaymentDetailDialog extends StatelessWidget {
@@ -154,56 +183,15 @@ class PaymentDetailDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Detail Pembayaran',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ],
-              ),
-              const Divider(height: 24),
-              _DetailRow(label: 'Order ID', value: payment.orderId),
-              _DetailRow(label: 'Transaction ID', value: payment.transactionId),
-              _DetailRow(label: 'Customer', value: payment.customer),
-              _DetailRow(label: 'Merchant', value: payment.merchant),
-              _DetailRow(label: 'Metode', value: payment.method),
-              _DetailRow(label: 'Jumlah', value: payment.amount),
-              _DetailRow(label: 'Status', value: payment.status),
-              _DetailRow(label: 'Tanggal', value: payment.date),
-              _DetailRow(label: 'Bank', value: payment.bank),
-              _DetailRow(label: 'Channel', value: payment.channel),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Tutup'),
-                ),
-              ),
-            ],
-          ),
+    return AlertDialog(
+      title: const Text('Detail Pembayaran'),
+      content: Text('Detail untuk ${payment.orderId}'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Tutup'),
         ),
-      ),
+      ],
     );
   }
 }
@@ -215,73 +203,19 @@ class PaymentUpdateDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Update Status Pembayaran',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ],
-              ),
-              const Divider(height: 24),
-              Text(
-                'Order ID: ',
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  color: Color(0xFF6B7280),
-                ),
-              ),
-              const SizedBox(height: 14),
-              const Text(
-                'Pilih Status Baru',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              _StatusOption(label: 'Berhasil', color: const Color(0xFF16A34A)),
-              _StatusOption(label: 'Pending', color: const Color(0xFFF59E0B)),
-              _StatusOption(label: 'Gagal', color: const Color(0xFFEF4444)),
-              _StatusOption(label: 'Expired', color: const Color(0xFF7C3AED)),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Batal'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Simpan Perubahan'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+    return AlertDialog(
+      title: const Text('Update Status Pembayaran'),
+      content: Text('Update status untuk ${payment.orderId}'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Batal'),
         ),
-      ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Simpan'),
+        ),
+      ],
     );
   }
 }
@@ -302,107 +236,20 @@ class PaymentConfirmDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              style: const TextStyle(fontSize: 12.5, color: Color(0xFF6B7280)),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Batal'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: primaryColor,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(primaryLabel),
-                  ),
-                ),
-              ],
-            ),
-          ],
+    return AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Batal'),
         ),
-      ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context),
+          style: FilledButton.styleFrom(backgroundColor: primaryColor),
+          child: Text(primaryLabel),
+        ),
+      ],
     );
   }
-}
-
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.label, required this.value});
-  final String label;
-  final String value;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 110,
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 12.5, color: Color(0xFF6B7280)),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-class _StatusOption extends StatelessWidget {
-  const _StatusOption({required this.label, required this.color});
-  final String label;
-  final Color color;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Row(
-      children: [
-        const Icon(Icons.radio_button_unchecked_rounded, size: 18),
-        const SizedBox(width: 10),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 11.5,
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
 }

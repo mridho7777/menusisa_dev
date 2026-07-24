@@ -63,7 +63,7 @@ class TransactionCombinedChartCard extends StatelessWidget {
           const SizedBox(height: 14),
           LayoutBuilder(
             builder: (context, constraints) {
-              final stacked = !sidebarCollapsed || constraints.maxWidth < 1180;
+              final stacked = constraints.maxWidth < 1;
               final chartArea = _ChartArea(progress: progress);
               final donutArea = _DonutArea(progress: progress);
               if (stacked) {
@@ -465,7 +465,7 @@ class TransactionActionGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth < 700 ? 2 : 3;
+        final crossAxisCount = 3;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),

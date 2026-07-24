@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/routes/app_routes.dart';
+import '../../../providers/activity_log_provider.dart';
 import '../../../providers/menu_provider.dart';
-import '../../../shared/widgets/action_feedback.dart';
+import '../../../core/routes/app_routes.dart';
 
 class ActivityLogPage extends StatefulWidget {
   const ActivityLogPage({super.key});
@@ -13,626 +13,237 @@ class ActivityLogPage extends StatefulWidget {
 }
 
 class _ActivityLogPageState extends State<ActivityLogPage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _moduleFilter = 'Semua Modul';
+  String _activityFilter = 'Semua Aktivitas';
+  String _userFilter = 'Semua User';
+
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    context.read<MenuProvider>().setRoute(AppRoutes.activityLog);
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<MenuProvider>().setRoute(AppRoutes.activityLog);
+      context.read<ActivityLogProvider>().loadLogs();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final padding = constraints.maxWidth < 900
-            ? const EdgeInsets.fromLTRB(16, 18, 16, 18)
-            : const EdgeInsets.fromLTRB(24, 18, 24, 20);
+    return Consumer<ActivityLogProvider>(
+      builder: (context, provider, _) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final padding = constraints.maxWidth < 900
+                ? const EdgeInsets.fromLTRB(16, 16, 16, 18)
+                : const EdgeInsets.fromLTRB(24, 18, 24, 20);
 
-        return SingleChildScrollView(
-          padding: padding,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1680),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  _ActivityHeader(),
-                  SizedBox(height: 14),
-                  _SummaryGrid(),
-                  SizedBox(height: 14),
-                  _FilterRow(),
-                  SizedBox(height: 14),
-                  _MainLayout(),
-                  SizedBox(height: 14),
-                  _BottomGrid(),
-                ],
+            return SingleChildScrollView(
+              padding: padding,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1680),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const _HeaderBar(),
+                      const SizedBox(height: 14),
+                      _SectionCard(child: _MetricsGrid(provider: provider)),
+                      const SizedBox(height: 14),
+                      _SectionCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Daftar Aktivitas',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF111827)),
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 280,
+                                  child: TextField(
+                                    controller: _searchController,
+                                    onChanged: provider.setSearchQuery,
+                                    decoration: InputDecoration(
+                                      hintText: 'Cari aktivitas, user, IP...',
+                                      hintStyle: const TextStyle(fontSize: 13),
+                                      prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                      isDense: true,
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                    ),
+                                  ),
+                                ),
+                                _FilterDropdown(value: _moduleFilter, label: 'Modul', items: _modules(provider), onChanged: (value) => setState(() => _moduleFilter = value)),
+                                _FilterDropdown(value: _activityFilter, label: 'Aktivitas', items: provider.uniqueActions, onChanged: (value) => provider.setActionFilter(value)),
+                                _FilterDropdown(value: _userFilter, label: 'User', items: provider.uniqueUsers, onChanged: (value) => provider.setUserFilter(value)),
+                                SizedBox(
+                                  height: 48,
+                                  child: OutlinedButton.icon(
+                                    onPressed: () {
+                                      setState(() {
+                                        _searchController.clear();
+                                        _moduleFilter = 'Semua Modul';
+                                        _activityFilter = 'Semua Aktivitas';
+                                        _userFilter = 'Semua User';
+                                      });
+                                      provider.setSearchQuery('');
+                                      provider.setActionFilter('Semua');
+                                      provider.setUserFilter('Semua');
+                                    },
+                                    icon: const Icon(Icons.refresh, size: 18),
+                                    label: const Text('Reset'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            if (provider.isLoading)
+                              const Padding(
+                                padding: EdgeInsets.all(24),
+                                child: Center(child: CircularProgressIndicator()),
+                              )
+                            else if (provider.filteredLogs.isEmpty)
+                              const Padding(
+                                padding: EdgeInsets.all(24),
+                                child: Center(child: Text('Tidak ada aktivitas ditemukan')),
+                              )
+                            else
+                              _ActivityTable(logs: provider.filteredLogs),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _ActivityHeader extends StatelessWidget {
-  const _ActivityHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Activity Log', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
-              SizedBox(height: 6),
-              Text(
-                'Pantau semua aktivitas yang terjadi di dalam sistem untuk keamanan dan audit trail.',
-                style: TextStyle(color: Color(0xFF64748B)),
-              ),
-            ],
-          ),
-        ),
-        ElevatedButton.icon(
-          onPressed: () {
-            showBottomActionMessage(
-              context,
-              title: 'Export Log',
-              subtitle: 'Log aktivitas berhasil diexport ke file dummy.',
-              color: const Color(0xFF15803D),
-              icon: Icons.download_outlined,
             );
           },
-          icon: const Icon(Icons.download_outlined, size: 16),
-          label: const Text('Export Log'),
-        ),
-      ],
-    );
-  }
-}
-
-class _SummaryGrid extends StatelessWidget {
-  const _SummaryGrid();
-
-  @override
-  Widget build(BuildContext context) {
-    final cards = [
-      _SummaryCard(color: const Color(0xFF2563EB), icon: Icons.description_outlined, title: 'Total Aktivitas', value: '12.456', trend: '+18.6% dari minggu lalu'),
-      _SummaryCard(color: const Color(0xFF15803D), icon: Icons.check_circle_outline, title: 'Login Berhasil', value: '2.845', trend: '+12.4% dari minggu lalu'),
-      _SummaryCard(color: const Color(0xFFF59E0B), icon: Icons.edit_outlined, title: 'Perubahan Data', value: '4.320', trend: '+22.7% dari minggu lalu'),
-      _SummaryCard(color: const Color(0xFFEF4444), icon: Icons.delete_outline, title: 'Penghapusan Data', value: '356', trend: '-8.3% dari minggu lalu'),
-      _SummaryCard(color: const Color(0xFF7C3AED), icon: Icons.lock_outline, title: 'Login Gagal', value: '89', trend: '-5.1% dari minggu lalu'),
-      _SummaryCard(color: const Color(0xFF166534), icon: Icons.download_outlined, title: 'Ekspor Data', value: '124', trend: '+10.2% dari minggu lalu'),
-    ];
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final narrow = constraints.maxWidth < 1150;
-        if (narrow) {
-          return Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: cards
-                .map((card) => SizedBox(width: (constraints.maxWidth - 12) / 2, child: card))
-                .toList(),
-          );
-        }
-
-        return Row(
-          children: [
-            for (var i = 0; i < cards.length; i++) ...[
-              Expanded(child: cards[i]),
-              if (i != cards.length - 1) const SizedBox(width: 12),
-            ],
-          ],
         );
       },
     );
   }
-}
 
-class _FilterRow extends StatelessWidget {
-  const _FilterRow();
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: const [
-        _SearchField(),
-        _FilterChipField(label: 'Semua Modul'),
-        _FilterChipField(label: 'Semua Aktivitas'),
-        _FilterChipField(label: 'Semua User'),
-        _DateField(),
-        _ResetButton(),
-      ],
-    );
+  List<String> _modules(ActivityLogProvider provider) {
+    final modules = provider.logs.map((log) => log['module']?.toString() ?? 'Unknown').where((module) => module.isNotEmpty).toSet().toList()..sort();
+    return ['Semua Modul', ...modules];
   }
 }
 
-class _MainLayout extends StatelessWidget {
-  const _MainLayout();
-
+class _HeaderBar extends StatelessWidget {
+  const _HeaderBar();
   @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 1250;
-        final main = _SectionCard(title: 'Daftar Aktivitas', child: _ActivityTable());
-        final right = Column(
-          children: const [
-            _DonutCard(),
-            SizedBox(height: 14),
-            _TopActivityCard(),
-            SizedBox(height: 14),
-            _QuickInfoCard(),
-            SizedBox(height: 14),
-            _AlertsCard(),
-          ],
-        );
-
-        if (compact) {
-          return Column(
-            children: [
-              main,
-              const SizedBox(height: 14),
-              right,
-            ],
-          );
-        }
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(flex: 4, child: main),
-            const SizedBox(width: 14),
-            Expanded(flex: 2, child: right),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _BottomGrid extends StatelessWidget {
-  const _BottomGrid();
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 1100) {
-          return const Column(
-            children: [
-              _DetailCard(),
-              SizedBox(height: 14),
-              _TrendCard(),
-            ],
-          );
-        }
-
-        return const Row(
-          children: [
-            Expanded(child: _DetailCard()),
-            SizedBox(width: 14),
-            Expanded(child: _TrendCard()),
-          ],
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Activity Log', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFF111827))), SizedBox(height: 3), Text('Pantau semua aktivitas yang terjadi di dalam sistem untuk keamanan dan audit trail', style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)))]);
 }
 
 class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.title, required this.child});
-
-  final String title;
+  const _SectionCard({required this.child});
   final Widget child;
+  @override
+  Widget build(BuildContext context) => Container(width: double.infinity, padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFE5E7EB)), boxShadow: const [BoxShadow(color: Color(0x0A000000), blurRadius: 18, offset: Offset(0, 6))]), child: child);
+}
+
+class _MetricsGrid extends StatelessWidget {
+  const _MetricsGrid({required this.provider});
+  final ActivityLogProvider provider;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [BoxShadow(color: Color(0x0A000000), blurRadius: 20, offset: Offset(0, 8))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 14),
-          child,
-        ],
-      ),
-    );
+    final metrics = [
+      _MetricData(icon: Icons.description_outlined, color: const Color(0xFF2563EB), title: 'Total Aktivitas', value: provider.totalActivities.toString(), trend: 'hari ini '),
+      _MetricData(icon: Icons.check_circle_outline, color: const Color(0xFF15803D), title: 'User Aktif Hari Ini', value: provider.uniqueUsersToday.toString(), trend: 'unik'),
+      _MetricData(icon: Icons.edit_outlined, color: const Color(0xFFF59E0B), title: 'Update', value: provider.countByActivityType('Update').toString(), trend: 'aktivitas'),
+      _MetricData(icon: Icons.delete_outline, color: const Color(0xFFEF4444), title: 'Delete', value: provider.countByActivityType('Delete').toString(), trend: 'aktivitas'),
+      _MetricData(icon: Icons.lock_outline, color: const Color(0xFF7C3AED), title: 'Login', value: provider.countByActivityType('Login').toString(), trend: 'aktivitas'),
+      _MetricData(icon: Icons.download_outlined, color: const Color(0xFF166534), title: 'Export', value: provider.countByActivityType('Export').toString(), trend: 'aktivitas'),
+    ];
+    return LayoutBuilder(builder: (context, constraints) {
+      int crossAxisCount = 6;
+      if (constraints.maxWidth < 1400) crossAxisCount = 3;
+      if (constraints.maxWidth < 900) crossAxisCount = 2;
+      if (constraints.maxWidth < 600) crossAxisCount = 1;
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: crossAxisCount, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 2.8),
+        itemCount: metrics.length,
+        itemBuilder: (context, index) => _MetricCard(data: metrics[index]),
+      );
+    });
   }
 }
 
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.color, required this.icon, required this.title, required this.value, required this.trend});
-
-  final Color color;
-  final IconData icon;
-  final String title;
-  final String value;
-  final String trend;
-
+class _MetricCard extends StatelessWidget {
+  const _MetricCard({required this.data});
+  final _MetricData data;
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 16, offset: Offset(0, 6))],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(14)),
-            child: Icon(icon, color: Colors.white),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontSize: 12.5, color: Color(0xFF475569))),
-                const SizedBox(height: 4),
-                Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 4),
-                Text(trend, style: const TextStyle(fontSize: 11.5, color: Color(0xFF15803D))),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Container(padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: const Color(0xFFFAFAFA), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E7EB))), child: Row(children: [Container(width: 66, height: 66, decoration: BoxDecoration(color: data.color, borderRadius: BorderRadius.circular(16)), child: Icon(data.icon, color: Colors.white, size: 34)), const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [Text(data.title, style: const TextStyle(fontSize: 11.5, color: Color(0xFF6B7280), fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis), const SizedBox(height: 4), Text(data.value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF111827))), const SizedBox(height: 2), Text(data.trend, style: const TextStyle(fontSize: 10, color: Color(0xFF15803D)), maxLines: 1, overflow: TextOverflow.ellipsis)]))]));
 }
 
-class _SearchField extends StatelessWidget {
-  const _SearchField();
-
+class _FilterDropdown extends StatelessWidget {
+  const _FilterDropdown({required this.value, required this.label, required this.items, required this.onChanged});
+  final String value; final String label; final List<String> items; final ValueChanged<String> onChanged;
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 280,
-      child: TextField(
-        decoration: InputDecoration(
-          hintText: 'Cari aktivitas, user, IP address, atau modul...',
-          prefixIcon: const Icon(Icons.search, size: 18),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FilterChipField extends StatelessWidget {
-  const _FilterChipField({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 150,
-      child: DropdownButtonFormField<String>(
-        items: [DropdownMenuItem(value: label, child: Text(label))],
-        onChanged: (_) {},
-        initialValue: label,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DateField extends StatelessWidget {
-  const _DateField();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 200,
-      child: TextFormField(
-        initialValue: '01 Mei 2025 - 20 Mei 2025',
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          suffixIcon: const Icon(Icons.calendar_today_outlined, size: 18),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ResetButton extends StatelessWidget {
-  const _ResetButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 56,
-      child: OutlinedButton(
-        onPressed: () {
-          showBottomActionMessage(
-            context,
-            title: 'Filter direset',
-            subtitle: 'Semua filter aktivitas kembali ke default.',
-            color: const Color(0xFF2563EB),
-            icon: Icons.restart_alt,
-          );
-        },
-        child: const Text('Reset Filter'),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => SizedBox(width: 180, child: DropdownButtonFormField<String>(initialValue: value, decoration: InputDecoration(labelText: label, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)), isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10)), items: items.map((item) => DropdownMenuItem(value: item, child: Text(item, style: const TextStyle(fontSize: 13)))).toList(), onChanged: (value) { if (value != null) onChanged(value); }));
 }
 
 class _ActivityTable extends StatelessWidget {
+  const _ActivityTable({required this.logs});
+  final List<Map<String, dynamic>> logs;
+
   @override
   Widget build(BuildContext context) {
+    final data = logs.take(50).toList();
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
-        columns: const [
-          DataColumn(label: Text('No.')),
-          DataColumn(label: Text('Waktu')),
-          DataColumn(label: Text('User')),
-          DataColumn(label: Text('Modul')),
-          DataColumn(label: Text('Aktivitas')),
-          DataColumn(label: Text('Deskripsi')),
-          DataColumn(label: Text('IP Address')),
-          DataColumn(label: Text('Perangkat')),
-          DataColumn(label: Text('Lokasi')),
-          DataColumn(label: Text('Aksi')),
-        ],
-        rows: List.generate(10, (index) {
-          const modules = [
-            'Merchant Management',
-            'Product Management',
-            'Transaction Management',
-            'Payment Monitoring',
-            'Product Approval',
-            'User Management',
-            'System Settings',
-            'Platform Revenue',
-            'Authentication',
-            'Authentication',
-          ];
-          const activities = ['Update', 'Create', 'Update', 'Approve', 'Reject', 'Create', 'Update', 'Export', 'Login Success', 'Login Failed'];
-          const descriptions = [
-            'Mengupdate data merchant',
-            'Menambahkan produk baru',
-            'Mengupdate status transaksi',
-            'Menyetujui pembayaran',
-            'Menolak produk',
-            'Menambahkan user baru',
-            'Mengubah pengaturan komisi',
-            'Mengekspor laporan pendapatan',
-            'Login berhasil ke sistem',
-            'Login gagal - password salah',
-          ];
-          const ips = ['192.168.1.10', '192.168.1.25', '192.168.1.18', '192.168.1.30', '192.168.1.22', '192.168.1.15', '192.168.1.10', '192.168.1.27', '192.168.1.10', '192.168.1.55'];
-          const devices = ['Chrome 124\nWindows 11', 'Chrome 124\nWindows 11', 'Firefox 125\nWindows 10', 'Edge 124\nWindows 11', 'Chrome 124\nWindows 11', 'Chrome 124\nWindows 11', 'Chrome 124\nWindows 11', 'Edge 124\nWindows 11', 'Chrome 124\nWindows 11', 'Chrome 124\nWindows 11'];
-          const locations = ['Jakarta, ID', 'Bandung, ID', 'Surabaya, ID', 'Yogyakarta, ID', 'Jakarta, ID', 'Medan, ID', 'Jakarta, ID', 'Semarang, ID', 'Jakarta, ID', 'Unknown'];
-
-          return DataRow(
-            cells: [
-              DataCell(Text('${index + 1}')),
-              DataCell(Text('20 Mei 2025\n10:2$index WIB')),
-              DataCell(Text(index == 0 ? 'Super Admin' : 'Admin')),
-              DataCell(Text(modules[index])),
-              DataCell(Text(activities[index])),
-              DataCell(Text(descriptions[index])),
-              DataCell(Text(ips[index])),
-              DataCell(Text(devices[index])),
-              DataCell(Text(locations[index])),
-              DataCell(
-                OutlinedButton(
-                  onPressed: () {
-                    showBottomActionMessage(
-                      context,
-                      title: 'Detail aktivitas',
-                      subtitle: 'Menampilkan detail baris ${index + 1}.',
-                      color: const Color(0xFF7C3AED),
-                      icon: Icons.visibility_outlined,
-                    );
-                  },
-                  child: const Icon(Icons.remove_red_eye_outlined, size: 16),
-                ),
-              ),
-            ],
-          );
-        }),
+        headingRowColor: WidgetStateProperty.all(const Color(0xFFF9FAFB)),
+        headingTextStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF374151)),
+        dataTextStyle: const TextStyle(fontSize: 13, color: Color(0xFF111827)),
+        columnSpacing: 24,
+        horizontalMargin: 16,
+        dataRowMinHeight: 56,
+        dataRowMaxHeight: 72,
+        columns: const [DataColumn(label: Text('No.')), DataColumn(label: Text('Waktu')), DataColumn(label: Text('User')), DataColumn(label: Text('Modul')), DataColumn(label: Text('Aktivitas')), DataColumn(label: Text('Deskripsi')), DataColumn(label: Text('IP Address')), DataColumn(label: Text('Perangkat')), DataColumn(label: Text('Lokasi'))],
+        rows: data.asMap().entries.map((entry) {
+          final index = entry.key + 1;
+          final row = entry.value;
+          final activity = row['activity_type']?.toString() ?? '-';
+          final color = switch (activity) { 'Create' => const Color(0xFF15803D), 'Update' => const Color(0xFF2563EB), 'Delete' => const Color(0xFFEF4444), 'Approve' => const Color(0xFF0F766E), 'Reject' => const Color(0xFFF59E0B), _ => const Color(0xFF6B7280) };
+          return DataRow(cells: [
+            DataCell(Text(index.toString())),
+            DataCell(Text(_formatTime(row['created_at']?.toString() ?? ''))),
+            DataCell(Text(row['user_name']?.toString() ?? '-', style: const TextStyle(fontWeight: FontWeight.w600))),
+            DataCell(Text(row['module']?.toString() ?? '-')),
+            DataCell(Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)), child: Text(activity, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)))),
+            DataCell(SizedBox(width: 200, child: Text(row['description']?.toString() ?? '-', maxLines: 2, overflow: TextOverflow.ellipsis))),
+            DataCell(Text(row['ip_address']?.toString() ?? '-')),
+            DataCell(Text(row['device']?.toString() ?? '-', style: const TextStyle(fontSize: 11.5))),
+            DataCell(Text(row['location']?.toString() ?? '-')),
+          ]);
+        }).toList(),
       ),
     );
   }
-}
 
-class _DonutCard extends StatelessWidget {
-  const _DonutCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      title: 'Aktivitas per Modul',
-      child: Container(height: 220, alignment: Alignment.center, child: const Text('Donut Chart')),
-    );
+  String _formatTime(String value) {
+    final parsed = DateTime.tryParse(value);
+    if (parsed == null) return value;
+    return '  \n:';
   }
+
+  String _month(int month) => const ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'][month - 1];
 }
 
-class _TopActivityCard extends StatelessWidget {
-  const _TopActivityCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      title: 'Aktivitas Teratas',
-      child: Column(
-        children: const [
-          _RankRow(rank: '1', title: 'Update Data Merchant', value: '1.245'),
-          _RankRow(rank: '2', title: 'Update Status Transaksi', value: '1.102'),
-          _RankRow(rank: '3', title: 'Approve Payment', value: '876'),
-          _RankRow(rank: '4', title: 'Create Product', value: '642'),
-          _RankRow(rank: '5', title: 'Export Laporan', value: '518'),
-        ],
-      ),
-    );
-  }
-}
-
-class _RankRow extends StatelessWidget {
-  const _RankRow({required this.rank, required this.title, required this.value});
-
-  final String rank;
-  final String title;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          SizedBox(width: 20, child: Text(rank)),
-          const SizedBox(width: 12),
-          Expanded(child: Text(title)),
-          Text(value),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickInfoCard extends StatelessWidget {
-  const _QuickInfoCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      title: 'Informasi Cepat',
-      child: const Column(
-        children: [
-          _InfoRow(label: 'Rata-rata Aktivitas per Hari', value: '1.780'),
-          _InfoRow(label: 'Aktivitas Hari Ini', value: '256'),
-          _InfoRow(label: 'User Aktif Hari Ini', value: '18'),
-          _InfoRow(label: 'Waktu Aktivitas Terakhir', value: '10:29 WIB'),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      leading: const Icon(Icons.circle, size: 10, color: Color(0xFF16A34A)),
-      title: Text(label, style: const TextStyle(fontSize: 13)),
-      trailing: Text(value),
-    );
-  }
-}
-
-class _AlertsCard extends StatelessWidget {
-  const _AlertsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      title: 'Notifikasi',
-      child: const Column(
-        children: [
-          _AlertRow(
-            icon: Icons.check_circle,
-            color: Color(0xFF16A34A),
-            title: 'Log aktivitas berhasil dimuat!',
-            subtitle: 'Total 12.456 aktivitas pada periode ini.',
-          ),
-          _AlertRow(
-            icon: Icons.warning_amber_rounded,
-            color: Color(0xFFF59E0B),
-            title: 'Login gagal terdeteksi!',
-            subtitle: 'Terdapat 37 percobaan login gagal.',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AlertRow extends StatelessWidget {
-  const _AlertRow({required this.icon, required this.color, required this.title, required this.subtitle});
-
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: color),
-      title: Text(title),
-      subtitle: Text(subtitle),
-    );
-  }
-}
-
-class _DetailCard extends StatelessWidget {
-  const _DetailCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      title: 'Detail Aktivitas',
-      child: const Text('Detail aktivitas terpilih ditampilkan di sini.'),
-    );
-  }
-}
-
-class _TrendCard extends StatelessWidget {
-  const _TrendCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      title: 'Ringkasan Aktivitas Harian',
-      child: Container(height: 180, alignment: Alignment.center, child: const Text('Line Chart')),
-    );
-  }
-}
+class _MetricData { const _MetricData({required this.icon, required this.color, required this.title, required this.value, required this.trend}); final IconData icon; final Color color; final String title; final String value; final String trend; }
