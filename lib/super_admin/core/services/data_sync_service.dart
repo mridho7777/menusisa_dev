@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'local_storage_service.dart';
 import 'supabase_service.dart';
 
@@ -14,8 +14,8 @@ class DataSyncService {
 
   DataSyncService._();
 
-  final _localStorage = LocalStorageService.instance;
-  final _supabase = SupabaseService.instance;
+  LocalStorageService get _localStorage => LocalStorageService.instance;
+  SupabaseService get _supabase => SupabaseService.instance;
 
   bool _useSupabase = false;
   bool get useSupabase => _useSupabase;
@@ -163,7 +163,7 @@ class DataSyncService {
       final data = await _supabase.getAll(supabaseTable);
       await _localStorage.saveList(storageKey, data);
       await _localStorage.saveString(
-        '\_last_sync',
+        '_last_sync',
         DateTime.now().toIso8601String(),
       );
       return true;
@@ -175,7 +175,7 @@ class DataSyncService {
 
   /// Get last sync time
   Future<DateTime?> getLastSyncTime(String storageKey) async {
-    final timeString = await _localStorage.getString('\_last_sync');
+    final timeString = await _localStorage.getString('_last_sync');
     if (timeString == null) return null;
     try {
       return DateTime.parse(timeString);
