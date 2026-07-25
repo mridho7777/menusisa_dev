@@ -53,3 +53,9 @@ skills-lock.json
 
 # Backup files
 *_backup.dart
+
+# VS Code settings
+.vscode/
+
+# Git backup bundle
+*.bundle
