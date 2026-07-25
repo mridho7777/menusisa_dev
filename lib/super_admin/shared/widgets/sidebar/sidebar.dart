@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -28,8 +29,8 @@ class Sidebar extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/images/logonotext.png',
+                SvgPicture.asset(
+                  'assets/svg/logonotext.svg',
                   width: 65,
                   height: 65,
                   fit: BoxFit.contain,

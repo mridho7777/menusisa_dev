@@ -59,7 +59,7 @@ class RevenueChartCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          SizedBox(height: 330, child: _ChartArea(progress: progress)),
+          SizedBox(height: 280, child: _ChartArea(progress: progress)),
         ],
       ),
     );
@@ -76,18 +76,21 @@ class RevenueDistributionCard extends StatelessWidget {
     final sections = [
       PieChartSectionData(
         color: const Color(0xFF0F8D55),
-        value: 60 * progress,
-        radius: 34,
+        value: 0 * progress,
+        radius: 28,
+        titleStyle: const TextStyle(fontSize: 0),
       ),
       PieChartSectionData(
         color: const Color(0xFFF59E0B),
-        value: 28 * progress,
-        radius: 34,
+        value: 0 * progress,
+        radius: 28,
+        titleStyle: const TextStyle(fontSize: 0),
       ),
       PieChartSectionData(
         color: const Color(0xFFEF4444),
-        value: 12 * progress,
-        radius: 34,
+        value: 0 * progress,
+        radius: 28,
+        titleStyle: const TextStyle(fontSize: 0),
       ),
     ];
 
@@ -110,7 +113,7 @@ class RevenueDistributionCard extends StatelessWidget {
                   child: PieChart(
                     PieChartData(
                       sectionsSpace: 0,
-                      centerSpaceRadius: 74,
+                      centerSpaceRadius: 52,
                       startDegreeOffset: -90,
                       sections: sections,
                       borderData: FlBorderData(show: false),
@@ -122,7 +125,7 @@ class RevenueDistributionCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Rp 245.680.000',
+                      'Rp 0',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -191,58 +194,21 @@ class RevenueSummaryCard extends StatelessWidget {
                   Text(
                     item.value,
                     style: const TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
+                      color: Color(0xFF111827),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    item.note,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF6B7280),
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF9FAFB),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Pertumbuhan Bulanan',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const Text(
-                      '+18.7%',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: Color(0xFF16A34A),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                const ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(999)),
-                  child: LinearProgressIndicator(
-                    value: 0.78,
-                    minHeight: 8,
-                    backgroundColor: Color(0xFFE5E7EB),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFF0F8D55),
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
         ],
@@ -308,137 +274,109 @@ class RevenueTopSourceCard extends StatelessWidget {
                   Text(
                     item.amount,
                     style: const TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0F8D55),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () {},
-              child: const Text('Lihat Semua'),
-            ),
-          ),
         ],
       ),
     );
   }
 }
 
-class RevenueInfoCard extends StatelessWidget {
-  const RevenueInfoCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text(
-            'Informasi Cepat',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-          ),
-          SizedBox(height: 12),
-          _InfoRow(label: 'Total Merchant Aktif', value: '2.145'),
-          _InfoRow(label: 'Total Transaksi', value: '48.650'),
-          _InfoRow(label: 'Rata-rata Komisi per Transaksi', value: 'Rp 3.810'),
-          _InfoRow(label: 'Rasio Pendapatan terhadap GMV', value: '3.00%'),
-        ],
-      ),
-    );
-  }
-}
-
+// Updated: Modern DataTable for Revenue - Hanya aksi Hapus
 class RevenueTableCard extends StatelessWidget {
   const RevenueTableCard({
     super.key,
     required this.items,
-    required this.onView,
+    required this.onDelete,
   });
 
   final List<RevenueItem> items;
-  final ValueChanged<RevenueItem> onView;
+  final ValueChanged<RevenueItem> onDelete;
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: items.map((item) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 28,
-                child: Text(item.id, style: const TextStyle(fontSize: 12)),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(item.date, style: const TextStyle(fontSize: 12)),
-              ),
-              Expanded(
-                child: Text(item.source, style: const TextStyle(fontSize: 12)),
-              ),
-              Expanded(
-                child: Text(
-                  item.category,
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  'Deskripsi revenue',
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ),
-              SizedBox(
-                width: 90,
-                child: Text(item.value, style: const TextStyle(fontSize: 12)),
-              ),
-              SizedBox(
-                width: 70,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF16A34A).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    item.status,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF16A34A),
-                      fontWeight: FontWeight.w600,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Menampilkan ${items.length} dari ${items.length} data',
+              style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            headingRowColor: WidgetStateProperty.all(const Color(0xFFF9FAFB)),
+            headingTextStyle: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF374151),
+            ),
+            dataTextStyle: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF111827),
+            ),
+            columnSpacing: 24,
+            horizontalMargin: 16,
+            dataRowMinHeight: 56,
+            dataRowMaxHeight: 56,
+            columns: const [
+              DataColumn(label: Text('No.')),
+              DataColumn(label: Text('Tanggal')),
+              DataColumn(label: Text('Sumber')),
+              DataColumn(label: Text('Kategori')),
+              DataColumn(label: Text('Nilai')),
+              DataColumn(label: Text('Status')),
+              DataColumn(label: Text('Aksi')),
+            ],
+            rows: items.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              return DataRow(
+                cells: [
+                  DataCell(Text('${index + 1}')),
+                  DataCell(Text(item.date)),
+                  DataCell(
+                    Text(
+                      item.source,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
-                ),
-              ),
-              SizedBox(
-                width: 50,
-                child: IconButton(
-                  onPressed: () => onView(item),
-                  icon: const Icon(Icons.remove_red_eye_outlined, size: 18),
-                ),
-              ),
-            ],
+                  DataCell(Text(item.category)),
+                  DataCell(
+                    Text(
+                      item.value,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0F8D55),
+                      ),
+                    ),
+                  ),
+                  DataCell(_StatusBadge(status: item.status)),
+                  DataCell(_ActionMenu(
+                    item: item,
+                    onDelete: onDelete,
+                  )),
+                ],
+              );
+            }).toList(),
           ),
-        );
-      }).toList(),
+        ),
+        const SizedBox(height: 16),
+        _PaginationControls(totalItems: items.length),
+      ],
     );
   }
 }
@@ -469,243 +407,165 @@ class RevenueNotificationTray extends StatelessWidget {
             children: [
               const Expanded(
                 child: Text(
-                  'Notifikasi Aksi',
+                  'Notifikasi Revenue',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
               ),
               TextButton(
                 onPressed: onClearAll,
-                child: const Text('Hapus Semua'),
+                child: const Text('Bersihkan Semua', style: TextStyle(fontSize: 12)),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          if (items.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Center(
-                child: Text(
-                  'Belum ada aksi yang memunculkan notifikasi.',
-                  style: TextStyle(color: Color(0xFF6B7280)),
+          ...items.map((notif) => _NotificationItem(notification: notif)),
+        ],
+      ),
+    );
+  }
+}
+
+// Updated _ActionMenu - Hanya tombol Hapus
+class _ActionMenu extends StatelessWidget {
+  const _ActionMenu({
+    required this.item,
+    required this.onDelete,
+  });
+
+  final RevenueItem item;
+  final ValueChanged<RevenueItem> onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.delete_rounded, size: 20, color: Color(0xFFEF4444)),
+      onPressed: () => onDelete(item),
+      tooltip: 'Hapus',
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    Color bgColor;
+    Color textColor;
+    switch (status) {
+      case 'Terverifikasi':
+        bgColor = const Color(0xFFD1FAE5);
+        textColor = const Color(0xFF059669);
+        break;
+      case 'Pending':
+        bgColor = const Color(0xFFFEF3C7);
+        textColor = const Color(0xFFF59E0B);
+        break;
+      default:
+        bgColor = const Color(0xFFF3F4F6);
+        textColor = const Color(0xFF6B7280);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: textColor,
+        ),
+      ),
+    );
+  }
+}
+
+class _PaginationControls extends StatelessWidget {
+  const _PaginationControls({required this.totalItems});
+
+  final int totalItems;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'Halaman 1 dari 1',
+          style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+        ),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left, size: 20),
+              onPressed: null,
+            ),
+            IconButton(
+              icon: const Icon(Icons.chevron_right, size: 20),
+              onPressed: null,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _NotificationItem extends StatelessWidget {
+  const _NotificationItem({required this.notification});
+
+  final RevenueNotification notification;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: Color(notification.color).withValues(alpha: 0.16),
+            child: Icon(
+              notification.icon == 'check' ? Icons.check_rounded : Icons.info_rounded,
+              size: 18,
+              color: Color(notification.color),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  notification.title,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                 ),
-              ),
-            )
-          else
-            Column(
-              children: items.map((item) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Color(item.color).withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: Color(item.color).withValues(alpha: 0.24),
-                      ),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          radius: 13,
-                          backgroundColor: Color(
-                            item.color,
-                          ).withValues(alpha: 0.16),
-                          child: Icon(
-                            switch (item.icon) {
-                              'check' => Icons.check_rounded,
-                              'warning' => Icons.warning_rounded,
-                              'cancel' => Icons.cancel_rounded,
-                              _ => Icons.info_rounded,
-                            },
-                            size: 15,
-                            color: Color(item.color),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12.5,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                item.subtitle,
-                                style: const TextStyle(
-                                  fontSize: 10.5,
-                                  color: Color(0xFF6B7280),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          item.time,
-                          style: const TextStyle(
-                            fontSize: 10.5,
-                            color: Color(0xFF9CA3AF),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({required this.value, required this.onChanged});
-
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonHideUnderline(
-      child: DropdownButton<String>(
-        value: value,
-        items: const ['30 Hari Terakhir', '7 Hari Terakhir', 'Hari Ini']
-            .map(
-              (item) => DropdownMenuItem(
-                value: item,
-                child: Text(item, style: const TextStyle(fontSize: 12)),
-              ),
-            )
-            .toList(),
-        onChanged: (item) {
-          if (item != null) onChanged(item);
-        },
-      ),
-    );
-  }
-}
-
-class _ChartArea extends StatelessWidget {
-  const _ChartArea({required this.progress});
-
-  final double progress;
-
-  static const _spots = <FlSpot>[
-    FlSpot(0, 20),
-    FlSpot(1, 80),
-    FlSpot(2, 60),
-    FlSpot(3, 130),
-    FlSpot(4, 120),
-    FlSpot(5, 160),
-    FlSpot(6, 120),
-    FlSpot(7, 100),
-    FlSpot(8, 140),
-    FlSpot(9, 130),
-    FlSpot(10, 170),
-    FlSpot(11, 160),
-    FlSpot(12, 180),
-    FlSpot(13, 200),
-    FlSpot(14, 190),
-    FlSpot(15, 210),
-    FlSpot(16, 240),
-    FlSpot(17, 220),
-    FlSpot(18, 230),
-    FlSpot(19, 260),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final count = (_spots.length * progress).clamp(2, _spots.length).toInt();
-    return LineChart(
-      LineChartData(
-        minX: 0,
-        maxX: 19,
-        minY: 0,
-        maxY: 300,
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: false,
-          horizontalInterval: 50,
-          getDrawingHorizontalLine: (value) =>
-              const FlLine(color: Color(0xFFE5E7EB), strokeWidth: 1),
-        ),
-        titlesData: FlTitlesData(
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 34,
-              interval: 50,
-              getTitlesWidget: (value, meta) => Text(
-                'M',
-                style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280)),
-              ),
+                const SizedBox(height: 2),
+                Text(
+                  notification.subtitle,
+                  style: const TextStyle(fontSize: 11.5, color: Color(0xFF6B7280)),
+                ),
+              ],
             ),
           ),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 28,
-              interval: 3,
-              getTitlesWidget: (value, meta) {
-                final labels = <int, String>{
-                  0: '21 Apr',
-                  3: '28 Apr',
-                  6: '5 Mei',
-                  9: '12 Mei',
-                  12: '19 Mei',
-                  15: '26 Mei',
-                  18: '2 Jun',
-                };
-                return Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    labels[value.toInt()] ?? '',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Color(0xFF6B7280),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-        borderData: FlBorderData(show: false),
-        lineBarsData: [
-          LineChartBarData(
-            spots: _spots.take(count).toList(),
-            isCurved: true,
-            color: const Color(0xFF0F8D55),
-            barWidth: 2.5,
-            isStrokeCapRound: true,
-            dotData: FlDotData(
-              show: true,
-              getDotPainter: (spot, percent, barData, index) =>
-                  FlDotCirclePainter(
-                    radius: 3.2,
-                    color: Color(0xFF0F8D55),
-                  ),
-            ),
-            belowBarData: BarAreaData(show: false),
+          Text(
+            notification.time,
+            style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
           ),
         ],
       ),
-      duration: const Duration(milliseconds: 250),
     );
   }
 }
@@ -718,44 +578,199 @@ class _LegendColumn extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: revenueSources.map((item) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: Row(
+      children: const [
+        _LegendItem(
+          color: Color(0xFF0F8D55),
+          title: 'Komisi Transaksi',
+          value: '0 (0%)',
+        ),
+        SizedBox(height: 14),
+        _LegendItem(
+          color: Color(0xFFF59E0B),
+          title: 'Biaya Langganan',
+          value: '0 (0%)',
+        ),
+        SizedBox(height: 14),
+        _LegendItem(
+          color: Color(0xFFEF4444),
+          title: 'Lainnya',
+          value: '0 (0%)',
+        ),
+      ],
+    );
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({
+    required this.color,
+    required this.title,
+    required this.value,
+  });
+
+  final Color color;
+  final String title;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: Color(item.color),
-                  borderRadius: BorderRadius.circular(4),
-                ),
+              Text(
+                title,
+                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
               ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    item.value,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF6B7280),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(fontSize: 10.5, color: Color(0xFF6B7280)),
               ),
             ],
           ),
-        );
-      }).toList(),
+        ),
+      ],
+    );
+  }
+}
+
+class _ChartArea extends StatelessWidget {
+  const _ChartArea({required this.progress});
+
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    return LineChart(
+      LineChartData(
+        minX: 1,
+        maxX: 7,
+        minY: 0,
+        maxY: 100,
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: 20,
+          getDrawingHorizontalLine: (value) =>
+              const FlLine(color: Color(0xFFE5E7EB), strokeWidth: 1),
+        ),
+        titlesData: FlTitlesData(
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 38,
+              interval: 20,
+              getTitlesWidget: (value, meta) => Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Text(
+                  value.toInt().toString(),
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+                ),
+              ),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 28,
+              interval: 1,
+              getTitlesWidget: (value, meta) {
+                final labels = <int, String>{
+                  1: 'Sen',
+                  2: 'Sel',
+                  3: 'Rab',
+                  4: 'Kam',
+                  5: 'Jum',
+                  6: 'Sab',
+                  7: 'Min',
+                };
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    labels[value.toInt()] ?? '',
+                    style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        lineBarsData: [
+          LineChartBarData(
+            spots: const [
+              FlSpot(1, 0),
+              FlSpot(2, 0),
+              FlSpot(3, 0),
+              FlSpot(4, 0),
+              FlSpot(5, 0),
+              FlSpot(6, 0),
+              FlSpot(7, 0),
+            ],
+            isCurved: true,
+            color: const Color(0xFF0F8D55),
+            barWidth: 3,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) =>
+                  FlDotCirclePainter(radius: 3.5, color: const Color(0xFF0F8D55)),
+            ),
+            belowBarData: BarAreaData(show: false),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      onSelected: onChanged,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            const SizedBox(width: 6),
+            const Icon(Icons.arrow_drop_down, size: 18),
+          ],
+        ),
+      ),
+      itemBuilder: (context) => [
+        '30 Hari Terakhir',
+        '7 Hari Terakhir',
+        'Hari Ini',
+      ].map((opt) => PopupMenuItem(value: opt, child: Text(opt))).toList(),
     );
   }
 }
@@ -768,45 +783,15 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        color: const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         value,
-        style: const TextStyle(fontSize: 11.5, color: Color(0xFF6B7280)),
+        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
       ),
     );
   }
 }
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(fontSize: 12.5, color: Color(0xFF374151)),
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
-          ),
-        ],
-      ),
-    );
-  }
-}
-

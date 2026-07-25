@@ -11,7 +11,7 @@ class TransactionMetricGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth >= 1180 ? 3 : 2;
+        final crossAxisCount = 3;
         final childAspectRatio = constraints.maxWidth >= 1500
             ? 3.6
             : constraints.maxWidth >= 1180

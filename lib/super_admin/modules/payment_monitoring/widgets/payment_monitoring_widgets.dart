@@ -1,4 +1,4 @@
-﻿import 'package:fl_chart/fl_chart.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../models/payment_monitoring_models.dart';
@@ -39,60 +39,80 @@ class PaymentCombinedChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Grafik Pembayaran & Distribusi Status',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Grafik Pembayaran & Distribusi Status',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+            ),
+            _FilterChip(value: filter, onChanged: onFilterChanged),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: Container(
+                height: 280,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Grafik Produk Masuk',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(child: _ChartArea(progress: progress)),
+                  ],
                 ),
               ),
-              _FilterChip(value: filter, onChanged: onFilterChanged),
-            ],
-          ),
-          const SizedBox(height: 14),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final stacked = !sidebarCollapsed || constraints.maxWidth < 1180;
-              final chartArea = _ChartArea(progress: progress);
-              final donutArea = _DonutArea(progress: progress);
-              if (stacked) {
-                return Column(
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              flex: 2,
+              child: Container(
+                height: 280,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 300, child: chartArea),
-                    const SizedBox(height: 16),
-                    SizedBox(height: 300, child: donutArea),
+                    const Text(
+                      'Status Produk',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(child: _DonutArea(progress: progress)),
                   ],
-                );
-              }
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: SizedBox(height: 330, child: chartArea),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    flex: 2,
-                    child: SizedBox(height: 330, child: donutArea),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -108,7 +128,7 @@ class _FilterChip extends StatelessWidget {
     return DropdownButtonHideUnderline(
       child: DropdownButton<String>(
         value: value,
-        items: const ['30 Hari Terakhir', '7 Hari Terakhir', 'Hari Ini']
+        items: const ['7 Hari Terakhir', 'Hari Ini']
             .map(
               (item) => DropdownMenuItem(
                 value: item,
@@ -130,26 +150,13 @@ class _ChartArea extends StatelessWidget {
   final double progress;
 
   static const _spots = <FlSpot>[
-    FlSpot(0, 100),
-    FlSpot(1, 240),
-    FlSpot(2, 180),
-    FlSpot(3, 320),
-    FlSpot(4, 290),
-    FlSpot(5, 410),
-    FlSpot(6, 370),
-    FlSpot(7, 450),
-    FlSpot(8, 420),
-    FlSpot(9, 530),
-    FlSpot(10, 490),
-    FlSpot(11, 600),
-    FlSpot(12, 570),
-    FlSpot(13, 670),
-    FlSpot(14, 640),
-    FlSpot(15, 730),
-    FlSpot(16, 700),
-    FlSpot(17, 790),
-    FlSpot(18, 820),
-    FlSpot(19, 880),
+    FlSpot(0, 0),
+    FlSpot(1, 0),
+    FlSpot(2, 0),
+    FlSpot(3, 0),
+    FlSpot(4, 0),
+    FlSpot(5, 0),
+    FlSpot(6, 0),
   ];
 
   @override
@@ -158,13 +165,13 @@ class _ChartArea extends StatelessWidget {
     return LineChart(
       LineChartData(
         minX: 0,
-        maxX: 19,
+        maxX: 6,
         minY: 0,
-        maxY: 1000,
+        maxY: 100,
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          horizontalInterval: 200,
+          horizontalInterval: 25,
           getDrawingHorizontalLine: (value) =>
               const FlLine(color: Color(0xFFE5E7EB), strokeWidth: 1),
         ),
@@ -179,7 +186,7 @@ class _ChartArea extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 34,
-              interval: 200,
+              interval: 25,
               getTitlesWidget: (value, meta) => Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: Text(
@@ -196,16 +203,16 @@ class _ChartArea extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 28,
-              interval: 3,
+              interval: 1,
               getTitlesWidget: (value, meta) {
                 final labels = <int, String>{
-                  0: '1 Apr',
-                  3: '8 Apr',
-                  6: '15 Apr',
-                  9: '22 Apr',
-                  12: '29 Apr',
-                  15: '6 Mei',
-                  18: '13 Mei',
+                  0: '10 Jul',
+                  1: '11 Jul',
+                  2: '12 Jul',
+                  3: '13 Jul',
+                  4: '14 Jul',
+                  5: '15 Jul',
+                  6: '16 Jul',
                 };
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
@@ -257,22 +264,22 @@ class _DonutArea extends StatelessWidget {
       PieChartSectionData(
         color: const Color(0xFF0F8D55),
         value: 76 * progress,
-        radius: 34,
+        radius: 28,
       ),
       PieChartSectionData(
         color: const Color(0xFFF59E0B),
         value: 10 * progress,
-        radius: 34,
+        radius: 28,
       ),
       PieChartSectionData(
         color: const Color(0xFFEF4444),
         value: 8 * progress,
-        radius: 34,
+        radius: 28,
       ),
       PieChartSectionData(
         color: const Color(0xFF7C3AED),
         value: 6 * progress,
-        radius: 34,
+        radius: 28,
       ),
     ];
 
@@ -288,7 +295,7 @@ class _DonutArea extends StatelessWidget {
                 child: PieChart(
                   PieChartData(
                     sectionsSpace: 0,
-                    centerSpaceRadius: 74,
+                    centerSpaceRadius: 50,
                     startDegreeOffset: -90,
                     sections: sections,
                     borderData: FlBorderData(show: false),
@@ -301,7 +308,7 @@ class _DonutArea extends StatelessWidget {
                 children: [
                   Text(
                     '2.456',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   SizedBox(height: 4),
                   Text(
@@ -313,7 +320,7 @@ class _DonutArea extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 14),
+        const SizedBox(width: 12),
         const Expanded(flex: 4, child: _LegendColumn()),
       ],
     );
@@ -326,7 +333,7 @@ class _LegendColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
         _LegendItem(
@@ -334,19 +341,19 @@ class _LegendColumn extends StatelessWidget {
           title: 'Berhasil',
           value: '1.856 (76%)',
         ),
-        SizedBox(height: 16),
+        SizedBox(height: 8),
         _LegendItem(
           color: Color(0xFFF59E0B),
           title: 'Pending',
           value: '246 (10%)',
         ),
-        SizedBox(height: 16),
+        SizedBox(height: 8),
         _LegendItem(
           color: Color(0xFFEF4444),
           title: 'Gagal',
           value: '198 (8%)',
         ),
-        SizedBox(height: 16),
+        SizedBox(height: 8),
         _LegendItem(
           color: Color(0xFF7C3AED),
           title: 'Expired',
@@ -374,8 +381,8 @@ class _LegendItem extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 14,
-          height: 14,
+          width: 10,
+          height: 10,
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(4),
@@ -387,12 +394,12 @@ class _LegendItem extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 4),
             Text(
               value,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+              style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280)),
             ),
           ],
         ),
@@ -477,7 +484,7 @@ class PaymentNotificationTray extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),

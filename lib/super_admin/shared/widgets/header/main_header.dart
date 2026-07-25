@@ -16,33 +16,46 @@ class MainHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
       ),
-      child: Row(
-        children: [
-          InkWell(
-            onTap: () => context.read<MenuProvider>().toggleSidebar(),
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Icon(Icons.menu, color: forcedCompact ? const Color(0xFF9CA3AF) : const Color(0xFF1F2937), size: 22),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final headerWidth = constraints.maxWidth < 1100 ? 1100.0 : constraints.maxWidth;
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: headerWidth,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    InkWell(
+                      onTap: () => context.read<MenuProvider>().toggleSidebar(),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(Icons.menu, color: forcedCompact ? const Color(0xFF9CA3AF) : const Color(0xFF1F2937), size: 22),
+                      ),
+                    ),
+                    const Spacer(),
+                    const CurrentTimeWidget(),
+                    const SizedBox(width: 18),
+                    const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E7EB)),
+                    const SizedBox(width: 14),
+                    const NotificationButton(),
+                    const SizedBox(width: 14),
+                    const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E7EB)),
+                    const SizedBox(width: 14),
+                    const ProfileDropdown(),
+                    const SizedBox(width: 4),
+                  ],
+                ),
+              ),
             ),
-          ),
-          const Spacer(),
-          const CurrentTimeWidget(),
-          const SizedBox(width: 18),
-          const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E7EB)),
-          const SizedBox(width: 14),
-          const NotificationButton(),
-          const SizedBox(width: 14),
-          const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E7EB)),
-          const SizedBox(width: 14),
-          const ProfileDropdown(),
-          const SizedBox(width: 4),
-        ],
+          );
+        },
       ),
     );
   }

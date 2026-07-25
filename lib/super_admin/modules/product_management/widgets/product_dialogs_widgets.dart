@@ -20,150 +20,181 @@ class ProductTableCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ...items.map((item) {
-          final isLow = item.status == 'Rendah';
-          final active = item.status == 'Aktif';
-          return Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Row(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 1200),
+        child: Table(
+          border: TableBorder(
+            horizontalInside: BorderSide(color: const Color(0xFFE5E7EB), width: 1),
+          ),
+          columnWidths: const {
+            0: FixedColumnWidth(50),
+            1: FixedColumnWidth(200),
+            2: FixedColumnWidth(150),
+            3: FixedColumnWidth(120),
+            4: FixedColumnWidth(100),
+            5: FixedColumnWidth(80),
+            6: FixedColumnWidth(100),
+            7: FixedColumnWidth(80),
+            8: FixedColumnWidth(120),
+            9: FixedColumnWidth(180),
+          },
+          children: [
+            TableRow(
+              decoration: const BoxDecoration(
+                color: Color(0xFFF9FAFB),
+              ),
               children: [
-                SizedBox(
-                  width: 28,
-                  child: Text(item.id, style: const TextStyle(fontSize: 12)),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    item.name,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    item.merchant,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    item.category,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-                SizedBox(
-                  width: 86,
-                  child: Text(item.price, style: const TextStyle(fontSize: 12)),
-                ),
-                SizedBox(
-                  width: 50,
-                  child: Text(
-                    '',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isLow
-                          ? const Color(0xFFEF4444)
-                          : const Color(0xFF111827),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 70,
-                  child: _StatusChip(
-                    label: item.status,
-                    color: active
-                        ? const Color(0xFF16A34A)
-                        : isLow
-                        ? const Color(0xFFEF4444)
-                        : const Color(0xFFF59E0B),
-                  ),
-                ),
-                SizedBox(
-                  width: 66,
-                  child: Text('', style: const TextStyle(fontSize: 12)),
-                ),
-                SizedBox(
-                  width: 98,
-                  child: Text(
-                    item.createdAt,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-                SizedBox(
-                  width: 180,
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => onView(item),
-                        icon: const Icon(
-                          Icons.remove_red_eye_outlined,
-                          size: 18,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => onEdit(item),
-                        icon: const Icon(Icons.edit_outlined, size: 18),
-                      ),
-                      IconButton(
-                        onPressed: () => onToggle(item),
-                        icon: Icon(
-                          active
-                              ? Icons.toggle_on_rounded
-                              : Icons.toggle_off_rounded,
-                          size: 22,
-                          color: active
-                              ? const Color(0xFF16A34A)
-                              : const Color(0xFFF59E0B),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => onDelete(item),
-                        icon: const Icon(
-                          Icons.delete_outline_rounded,
-                          size: 18,
-                          color: Color(0xFFEF4444),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                _TableHeaderCell(label: 'No'),
+                _TableHeaderCell(label: 'Nama Produk'),
+                _TableHeaderCell(label: 'Merchant'),
+                _TableHeaderCell(label: 'Kategori'),
+                _TableHeaderCell(label: 'Harga'),
+                _TableHeaderCell(label: 'Stok'),
+                _TableHeaderCell(label: 'Status'),
+                _TableHeaderCell(label: 'Terjual'),
+                _TableHeaderCell(label: 'Tanggal'),
+                _TableHeaderCell(label: 'Aksi'),
               ],
             ),
-          );
-        }),
-      ],
+            ...items.map((item) {
+              final isLow = item.status == 'Rendah';
+              final active = item.status == 'Aktif';
+              return TableRow(
+                children: [
+                  _TableCell(child: Text(item.id, style: const TextStyle(fontSize: 12.5))),
+                  _TableCell(
+                    child: Text(
+                      item.name,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  _TableCell(child: Text(item.merchant, style: const TextStyle(fontSize: 12.5))),
+                  _TableCell(child: Text(item.category, style: const TextStyle(fontSize: 12.5))),
+                  _TableCell(child: Text(item.price, style: const TextStyle(fontSize: 12.5))),
+                  _TableCell(
+                    child: Text(
+                      item.stock.toString(),
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: isLow ? const Color(0xFFEF4444) : const Color(0xFF111827),
+                        fontWeight: isLow ? FontWeight.w600 : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                  _TableCell(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: active
+                            ? const Color(0xFFE7F8EC)
+                            : isLow
+                            ? const Color(0xFFFEF2F2)
+                            : const Color(0xFFFFF7ED),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        item.status,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: active
+                              ? const Color(0xFF16A34A)
+                              : isLow
+                              ? const Color(0xFFEF4444)
+                              : const Color(0xFFF59E0B),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  _TableCell(child: Text(item.sold.toString(), style: const TextStyle(fontSize: 12.5))),
+                  _TableCell(child: Text(item.createdAt, style: const TextStyle(fontSize: 12.5))),
+                  _TableCell(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          onPressed: () => onView(item),
+                          icon: const Icon(Icons.remove_red_eye_outlined, size: 18),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: () => onEdit(item),
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: () => onToggle(item),
+                          icon: Icon(
+                            active ? Icons.toggle_on_rounded : Icons.toggle_off_rounded,
+                            size: 22,
+                            color: active ? const Color(0xFF16A34A) : const Color(0xFFF59E0B),
+                          ),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: () => onDelete(item),
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 18,
+                            color: Color(0xFFEF4444),
+                          ),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            }),
+          ],
+        ),
+      ),
     );
   }
 }
 
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.label, required this.color});
-
+class _TableHeaderCell extends StatelessWidget {
+  const _TableHeaderCell({required this.label});
   final String label;
-  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Text(
         label,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          fontSize: 11,
-          color: color,
-          fontWeight: FontWeight.w600,
+        style: const TextStyle(
+          fontSize: 12.5,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF374151),
         ),
       ),
+    );
+  }
+}
+
+class _TableCell extends StatelessWidget {
+  const _TableCell({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      child: child,
     );
   }
 }
@@ -177,49 +208,46 @@ class ProductDetailDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Detail Produk',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Detail Produk',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ],
-              ),
-              const Divider(height: 24),
-              _DetailRow(label: 'Nama Produk', value: product.name),
-              _DetailRow(label: 'Merchant', value: product.merchant),
-              _DetailRow(label: 'Kategori', value: product.category),
-              _DetailRow(label: 'Harga', value: product.price),
-              _DetailRow(label: 'Stok', value: ''),
-              _DetailRow(label: 'Terjual', value: ''),
-              _DetailRow(label: 'Deskripsi', value: product.description),
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Tutup'),
                 ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _DetailRow(label: 'ID Produk', value: product.id),
+            _DetailRow(label: 'Nama Produk', value: product.name),
+            _DetailRow(label: 'Merchant', value: product.merchant),
+            _DetailRow(label: 'Kategori', value: product.category),
+            _DetailRow(label: 'Harga', value: product.price),
+            _DetailRow(label: 'Stok', value: product.stock.toString()),
+            _DetailRow(label: 'Status', value: product.status),
+            _DetailRow(label: 'Terjual', value: product.sold.toString()),
+            _DetailRow(label: 'Dibuat', value: product.createdAt),
+            _DetailRow(label: 'Deskripsi', value: product.description),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Tutup'),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -235,82 +263,66 @@ class ProductEditDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Edit Produk',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Edit Produk',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
-                  IconButton(
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Nama Produk',
+                hintText: product.name,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Harga',
+                hintText: product.price,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Stok',
+                hintText: product.stock.toString(),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ],
-              ),
-              const Divider(height: 24),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Nama Produk',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    child: const Text('Batal'),
                   ),
                 ),
-                controller: TextEditingController(text: product.name),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Harga',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Simpan Perubahan'),
                   ),
                 ),
-                controller: TextEditingController(text: product.price),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Deskripsi',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                maxLines: 3,
-                controller: TextEditingController(text: product.description),
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Batal'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Simpan Perubahan'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -470,3 +482,4 @@ class _DetailRow extends StatelessWidget {
     );
   }
 }
+

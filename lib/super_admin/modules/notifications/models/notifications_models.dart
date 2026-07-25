@@ -36,6 +36,29 @@ class NotificationItem {
     required this.status,
     required this.readProgress,
   });
+
+  factory NotificationItem.fromJson(Map<String, dynamic> json) {
+    return NotificationItem(
+      id: (json['id'] ?? '').toString(),
+      title: (json['title'] ?? '').toString(),
+      type: (json['type'] ?? 'system').toString(),
+      recipient: 'admin',
+      channel: 'app',
+      sender: 'system',
+      sentAt: (json['created_at'] ?? '').toString(),
+      status: 'Terkirim',
+      readProgress: '1/1',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'body': title,
+      'type': type,
+    };
+  }
 }
 
 class NotificationChannelStat {

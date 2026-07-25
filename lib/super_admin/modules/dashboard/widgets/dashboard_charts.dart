@@ -1,4 +1,4 @@
-import 'package:fl_chart/fl_chart.dart';
+﻿import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 class DashboardLineChart extends StatelessWidget {
@@ -7,13 +7,13 @@ class DashboardLineChart extends StatelessWidget {
   final double progress;
 
   static const _spots = <FlSpot>[
-    FlSpot(1, 140),
-    FlSpot(2, 430),
-    FlSpot(3, 260),
-    FlSpot(4, 360),
-    FlSpot(5, 520),
-    FlSpot(6, 560),
-    FlSpot(7, 330),
+    FlSpot(1, 0),
+    FlSpot(2, 0),
+    FlSpot(3, 0),
+    FlSpot(4, 0),
+    FlSpot(5, 0),
+    FlSpot(6, 0),
+    FlSpot(7, 0),
   ];
 
   @override
@@ -136,72 +136,79 @@ class DashboardDonutChart extends StatelessWidget {
     final sections = [
       PieChartSectionData(
         color: const Color(0xFF0F8D55),
-        value: 52 * progress,
-        radius: 34,
+        value: 0 * progress,
+        radius: 24,
+        titleStyle: const TextStyle(fontSize: 0),
       ),
       PieChartSectionData(
         color: const Color(0xFFF59E0B),
-        value: 34 * progress,
-        radius: 34,
+        value: 0 * progress,
+        radius: 24,
+        titleStyle: const TextStyle(fontSize: 0),
       ),
       PieChartSectionData(
         color: const Color(0xFFEF4444),
-        value: 14 * progress,
-        radius: 34,
+        value: 0 * progress,
+        radius: 24,
+        titleStyle: const TextStyle(fontSize: 0),
       ),
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Row(
-          children: [
-            Expanded(
-              flex: 5,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  AspectRatio(
-                    aspectRatio: 1,
-                    child: PieChart(
-                      PieChartData(
-                        sectionsSpace: 0,
-                        centerSpaceRadius: 78,
-                        startDegreeOffset: -90,
-                        sections: sections,
-                        borderData: FlBorderData(show: false),
+        // Smaller donut chart size
+        return SizedBox(
+          height: 240,
+          child: Row(
+            children: [
+              Expanded(
+                flex: 4,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: PieChart(
+                        PieChartData(
+                          sectionsSpace: 0,
+                          centerSpaceRadius: 52,
+                          startDegreeOffset: -90,
+                          sections: sections,
+                          borderData: FlBorderData(show: false),
+                        ),
+                        duration: const Duration(milliseconds: 250),
                       ),
-                      duration: const Duration(milliseconds: 250),
                     ),
-                  ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Text(
-                        'Total',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF6B7280),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Text(
+                          'Total',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF6B7280),
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        '2.386',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                        SizedBox(height: 4),
+                        Text(
+                          '0',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 14),
-            SizedBox(
-              width: constraints.maxWidth * 0.32,
-              child: const _LegendColumn(),
-            ),
-          ],
+              const SizedBox(width: 14),
+              Expanded(
+                flex: 5,
+                child: const _LegendColumn(),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -220,19 +227,19 @@ class _LegendColumn extends StatelessWidget {
         _LegendItem(
           color: Color(0xFF0F8D55),
           title: 'QRIS (Barcode)',
-          value: '1.245 (52%)',
+          value: '0 (0%)',
         ),
-        SizedBox(height: 18),
+        SizedBox(height: 14),
         _LegendItem(
           color: Color(0xFFF59E0B),
           title: 'Transfer Bank',
-          value: '820 (34%)',
+          value: '0 (0%)',
         ),
-        SizedBox(height: 18),
+        SizedBox(height: 14),
         _LegendItem(
           color: Color(0xFFEF4444),
           title: 'Bayar di Tempat',
-          value: '321 (14%)',
+          value: '0 (0%)',
         ),
       ],
     );
@@ -256,27 +263,29 @@ class _LegendItem extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 14,
-          height: 14,
+          width: 12,
+          height: 12,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(3),
           ),
         ),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
-            ),
-          ],
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(fontSize: 10.5, color: Color(0xFF6B7280)),
+              ),
+            ],
+          ),
         ),
       ],
     );

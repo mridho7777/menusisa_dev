@@ -1,4 +1,4 @@
-﻿import 'package:fl_chart/fl_chart.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../models/product_management_models.dart';
@@ -30,6 +30,133 @@ class ProductSectionCard extends StatelessWidget {
   }
 }
 
+// Widget grafik garis terpisah
+class ProductLineChartCard extends StatelessWidget {
+  const ProductLineChartCard({
+    super.key,
+    required this.progress,
+    required this.filter,
+    required this.onFilterChanged,
+  });
+
+  final double progress;
+  final String filter;
+  final ValueChanged<String> onFilterChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Grafik Penjualan dalam 1 Minggu',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+            ),
+            _FilterChip(value: filter, onChanged: onFilterChanged),
+          ],
+        ),
+        const SizedBox(height: 14),
+        SizedBox(
+          height: 280,
+          child: _ChartArea(progress: progress),
+        ),
+      ],
+    );
+  }
+}
+
+// Widget grafik donat terpisah
+class ProductDonutChartCard extends StatelessWidget {
+  const ProductDonutChartCard({
+    super.key,
+    required this.progress,
+  });
+
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Distribusi Kategori Produk',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 14),
+        SizedBox(
+          height: 280,
+          child: _DonutArea(progress: progress),
+        ),
+      ],
+    );
+  }
+}
+
+class ProductToolbar extends StatelessWidget {
+  const ProductToolbar({
+    super.key,
+    required this.searchQuery,
+    required this.onSearchChanged,
+    required this.actions,
+    required this.onActionTap,
+  });
+
+  final String searchQuery;
+  final ValueChanged<String> onSearchChanged;
+  final List<String> actions;
+  final ValueChanged<String> onActionTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 1;
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            SizedBox(
+              width: isNarrow ? constraints.maxWidth : constraints.maxWidth * 0.5,
+              child: TextField(
+                onChanged: onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: 'Cari produk...',
+                  hintStyle: const TextStyle(fontSize: 13),
+                  prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+              ),
+            ),
+            ...actions.map((action) {
+              final icon = switch (action) {
+                'Import Data' => Icons.upload_rounded,
+                'Refresh' => Icons.refresh_rounded,
+                'Filter Lanjutan' => Icons.filter_list_rounded,
+                'Laporan' => Icons.summarize_rounded,
+                _ => Icons.circle,
+              };
+              return OutlinedButton.icon(
+                onPressed: () => onActionTap(action),
+                icon: Icon(icon, size: 18),
+                label: Text(action, style: const TextStyle(fontSize: 13)),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                ),
+              );
+            }),
+          ],
+        );
+      },
+    );
+  }
+}
 class ProductCombinedChartCard extends StatelessWidget {
   const ProductCombinedChartCard({
     super.key,
@@ -70,7 +197,7 @@ class ProductCombinedChartCard extends StatelessWidget {
           const SizedBox(height: 14),
           LayoutBuilder(
             builder: (context, constraints) {
-              final stacked = !sidebarCollapsed || constraints.maxWidth < 1180;
+              final stacked = constraints.maxWidth < 1;
               final chartArea = _ChartArea(progress: progress);
               final donutArea = _DonutArea(progress: progress);
               if (stacked) {
@@ -376,19 +503,23 @@ class _LegendItem extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
-            ),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -460,7 +591,7 @@ class ProductActionGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth < 700 ? 2 : 3;
+        final crossAxisCount = 3;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -618,4 +749,6 @@ class ProductNotificationTray extends StatelessWidget {
     );
   }
 }
+
+
 

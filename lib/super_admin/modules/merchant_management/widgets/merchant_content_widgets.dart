@@ -8,17 +8,13 @@ class MerchantRegistrationChart extends StatelessWidget {
   final double progress;
 
   static const _spots = <FlSpot>[
-    FlSpot(0, 8),
-    FlSpot(1, 20),
-    FlSpot(2, 15),
-    FlSpot(3, 25),
-    FlSpot(4, 16),
-    FlSpot(5, 21),
-    FlSpot(6, 26),
-    FlSpot(7, 24),
-    FlSpot(8, 38),
-    FlSpot(9, 35),
-    FlSpot(10, 45),
+    FlSpot(1, 0),
+    FlSpot(2, 0),
+    FlSpot(3, 0),
+    FlSpot(4, 0),
+    FlSpot(5, 0),
+    FlSpot(6, 0),
+    FlSpot(7, 0),
   ];
 
   @override
@@ -26,9 +22,9 @@ class MerchantRegistrationChart extends StatelessWidget {
     return LineChart(
       LineChartData(
         minX: 0,
-        maxX: 10,
+        maxX: 6,
         minY: 0,
-        maxY: 50,
+        maxY: 45,
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
@@ -37,18 +33,25 @@ class MerchantRegistrationChart extends StatelessWidget {
               const FlLine(color: Color(0xFFE5E7EB), strokeWidth: 1),
         ),
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 34,
+              reservedSize: 30,
               interval: 10,
               getTitlesWidget: (value, meta) => Padding(
-                padding: const EdgeInsets.only(right: 8),
+                padding: const EdgeInsets.only(right: 6),
                 child: Text(
                   value.toInt().toString(),
-                  style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280)),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Color(0xFF6B7280),
+                  ),
                 ),
               ),
             ),
@@ -57,21 +60,25 @@ class MerchantRegistrationChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 28,
-              interval: 2,
+              interval: 1,
               getTitlesWidget: (value, meta) {
-                final labels = <int, String>{
-                  0: '21 Apr',
-                  2: '26 Apr',
-                  4: '1 Mei',
-                  6: '10 Mei',
-                  8: '16 Mei',
-                  10: '20 Mei',
+                const labels = <int, String>{
+                  1: '1',
+                  2: '2',
+                  3: '3',
+                  4: '4',
+                  5: '5',
+                  6: '6',
+                  7: '7',
                 };
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     labels[value.toInt()] ?? '',
-                    style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280)),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Color(0xFF6B7280),
+                    ),
                   ),
                 );
               },
@@ -81,18 +88,23 @@ class MerchantRegistrationChart extends StatelessWidget {
         borderData: FlBorderData(show: false),
         lineBarsData: [
           LineChartBarData(
-            spots: _spots.take((_spots.length * progress).clamp(2, _spots.length).toInt()).toList(),
+            spots: _spots
+                .take(
+                  (_spots.length * progress).clamp(2, _spots.length).toInt(),
+                )
+                .toList(),
             isCurved: true,
             color: const Color(0xFF0F8D55),
             barWidth: 2.5,
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: true,
-              getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-                radius: 3.2,
-                color: const Color(0xFF0F8D55),
-                strokeWidth: 0,
-              ),
+              getDotPainter: (spot, percent, barData, index) =>
+                  FlDotCirclePainter(
+                    radius: 3.5,
+                    color: const Color(0xFF0F8D55),
+                    strokeWidth: 0,
+                  ),
             ),
             belowBarData: BarAreaData(show: false),
           ),
@@ -113,26 +125,26 @@ class MerchantDistributionDonut extends StatelessWidget {
     final sections = [
       PieChartSectionData(
         color: const Color(0xFF0F8D55),
-        value: 112 * progress,
-        radius: 32,
+        value: 0 * progress,
+        radius: 28,
         showTitle: false,
       ),
       PieChartSectionData(
         color: const Color(0xFFF59E0B),
-        value: 10 * progress,
-        radius: 32,
+        value: 0 * progress,
+        radius: 28,
         showTitle: false,
       ),
       PieChartSectionData(
         color: const Color(0xFF7C3AED),
-        value: 4 * progress,
-        radius: 32,
+        value: 0 * progress,
+        radius: 28,
         showTitle: false,
       ),
       PieChartSectionData(
         color: const Color(0xFFEF4444),
-        value: 2 * progress,
-        radius: 32,
+        value: 0 * progress,
+        radius: 28,
         showTitle: false,
       ),
     ];
@@ -146,7 +158,7 @@ class MerchantDistributionDonut extends StatelessWidget {
               PieChart(
                 PieChartData(
                   sectionsSpace: 0,
-                  centerSpaceRadius: 60,
+                  centerSpaceRadius: 50,
                   startDegreeOffset: -90,
                   sections: sections,
                   borderData: FlBorderData(show: false),
@@ -157,8 +169,8 @@ class MerchantDistributionDonut extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '128',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                    '0',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   SizedBox(height: 2),
                   Text(
@@ -170,7 +182,7 @@ class MerchantDistributionDonut extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         Column(
           children: merchantDistributionLegend.map((item) {
             return Padding(
@@ -189,12 +201,18 @@ class MerchantDistributionDonut extends StatelessWidget {
                   Expanded(
                     child: Text(
                       item.title,
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   Text(
                     item.value,
-                    style: const TextStyle(fontSize: 10.5, color: Color(0xFF6B7280)),
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      color: Color(0xFF6B7280),
+                    ),
                   ),
                 ],
               ),
@@ -268,7 +286,7 @@ class _NotificationItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: iconColor),
+          Icon(icon, size: 20, color: iconColor),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -276,17 +294,26 @@ class _NotificationItem extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 10.5, color: Color(0xFF6B7280)),
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    color: Color(0xFF6B7280),
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   time,
-                  style: const TextStyle(fontSize: 9.5, color: Color(0xFF9CA3AF)),
+                  style: const TextStyle(
+                    fontSize: 9.5,
+                    color: Color(0xFF9CA3AF),
+                  ),
                 ),
               ],
             ),
@@ -376,12 +403,18 @@ class _TimelineItem extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   time,
-                  style: const TextStyle(fontSize: 10, color: Color(0xFF9CA3AF)),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Color(0xFF9CA3AF),
+                  ),
                 ),
               ],
             ),
@@ -447,11 +480,18 @@ class _VerificationRow extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             Text(
               value,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
             ),
           ],
         ),
@@ -495,13 +535,13 @@ class MerchantRevenueSummary extends StatelessWidget {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
+                children: const [
+                  Text(
                     'Bulan Ini',
                     style: TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
+                  SizedBox(height: 4),
+                  Text(
                     'Rp 12.750.000',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                   ),
@@ -514,14 +554,18 @@ class MerchantRevenueSummary extends StatelessWidget {
                 color: const Color(0xFFDCFCE7),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   Icon(Icons.trending_up, size: 14, color: Color(0xFF16A34A)),
                   SizedBox(width: 4),
                   Text(
                     '+18%',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF16A34A)),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF16A34A),
+                    ),
                   ),
                 ],
               ),
@@ -531,10 +575,7 @@ class MerchantRevenueSummary extends StatelessWidget {
         const SizedBox(height: 16),
         SizedBox(
           height: 40,
-          child: CustomPaint(
-            painter: _MiniChartPainter(),
-            child: Container(),
-          ),
+          child: CustomPaint(painter: _MiniChartPainter(), child: Container()),
         ),
       ],
     );
@@ -551,10 +592,13 @@ class _MiniChartPainter extends CustomPainter {
 
     final path = Path();
     final points = [0.2, 0.5, 0.3, 0.7, 0.4, 0.8, 0.9];
-    
+
     path.moveTo(0, size.height * (1 - points[0]));
     for (int i = 1; i < points.length; i++) {
-      path.lineTo(size.width * i / (points.length - 1), size.height * (1 - points[i]));
+      path.lineTo(
+        size.width * i / (points.length - 1),
+        size.height * (1 - points[i]),
+      );
     }
 
     canvas.drawPath(path, paint);

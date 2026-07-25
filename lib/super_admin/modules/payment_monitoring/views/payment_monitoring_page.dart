@@ -18,7 +18,7 @@ class PaymentMonitoringPage extends StatefulWidget {
 class _PaymentMonitoringPageState extends State<PaymentMonitoringPage>
     with TickerProviderStateMixin {
   late final AnimationController chartController;
-  String _chartFilter = '30 Hari Terakhir';
+  String _chartFilter = '7 Hari Terakhir';
   final List<PaymentNotification> _notifications = [];
 
   @override
@@ -240,40 +240,21 @@ class _PaymentMonitoringPageState extends State<PaymentMonitoringPage>
 class _HeaderBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Payment Monitoring',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF111827),
-                ),
-              ),
-              SizedBox(height: 3),
-              Text(
-                'Pantau semua pembayaran yang terjadi pada platform. Monitor status pembayaran, metode, dan lakukan tindakan yang diperlukan.',
-                style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
-              ),
-            ],
+        Text(
+          'Payment Monitoring',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF111827),
           ),
         ),
-        const SizedBox(width: 12),
-        ElevatedButton(
-          onPressed: () {},
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF0F8D55),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          child: const Text('Export Laporan'),
+        SizedBox(height: 3),
+        Text(
+          'Pantau semua pembayaran yang terjadi pada platform. Monitor status pembayaran, metode, dan lakukan tindakan yang diperlukan.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
         ),
       ],
     );
